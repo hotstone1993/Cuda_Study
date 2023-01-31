@@ -1,8 +1,15 @@
 #include <iostream>
 
-#include "utils.h"
+#include "cuda_support.h"
 
 int main(int argc, char *argv[]) {
-    std::cout << "print" << std::endl;
+    try {
+        initCUDA();
+
+        
+    } catch(const char* message) {
+        std::cout << message << std::endl;        
+    }
+
     return 0;
 }
