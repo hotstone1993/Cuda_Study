@@ -7,7 +7,12 @@ inline void initCUDA() {
     {
         throw "Do you have a CUDA-capable GPU installed?";
     }
+    // only use 
     if (cudaSetDevice(0) != cudaSuccess) {
         throw "cudaSetDevice failed!";
     }
+}
+
+#define CUDA_MALLOC(ptr, size, TYPE) {\
+    cudaMalloc((void**)&ptr, size * sizeof(TYPE)); \
 }
