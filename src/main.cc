@@ -1,7 +1,7 @@
 #include <iostream>
 #include "cuda_support.h"
 #include "EventTimer.h"
-#include "0.basic/00_Mul_Matrix.cuh"
+#include "0.basic/00_MatMul.cuh"
 
 int main(int argc, char *argv[]) {
     float* host_input, *device_input = nullptr;

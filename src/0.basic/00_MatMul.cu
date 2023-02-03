@@ -1,4 +1,4 @@
-#include "00_Mul_Matrix.cuh"
+#include "00_MatMul.cuh"
 
 #define THREADS 32
 
