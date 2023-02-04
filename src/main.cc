@@ -4,18 +4,16 @@
 #include "0.basic/00_MatMul.cuh"
 
 int main(int argc, char *argv[]) {
-    float* host_input, *device_input = nullptr;
-    float* host_output, *device_output = nullptr;
+    std::vector<int*> inputs;
+    std::vector<int*> outputs;
 
     try {
         EventTimer timer;
         initCUDA();
         timer.startTimer();
-        CUDA_ALLOC(1024, float, 1024, float)
 
-        basic::run(device_input, device_output, device_output);
+        basic::run(inputs, outputs);
 
-        CUDA_DEALLOC()
         timer.stopTimer();
         timer.printElapsedTime();
     } catch(const char* message) {

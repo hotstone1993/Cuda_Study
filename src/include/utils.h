@@ -3,6 +3,7 @@
 #include <iostream>
 #include <type_traits>
 #include <algorithm>
+#include <vector>
 
 
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon

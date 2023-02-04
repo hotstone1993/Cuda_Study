@@ -1,6 +1,9 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
+#define SIZE 10000
+#define THREADS 16
+
 inline void initCUDA() {
     int deviceCount = 0;
     if (cudaSuccess != cudaGetDeviceCount(&deviceCount))
@@ -19,18 +22,4 @@ inline void initCUDA() {
     if (cudaStatus != cudaSuccess) { \
         throw "cudaMalloc failed!"; \
     }\
-}
-
-#define CUDA_ALLOC(INPUT_SIZE, INPUT_TYPE, OUTPUT_SIZE, OUTPUT_TYPE) { \
-    host_input = new INPUT_TYPE[INPUT_SIZE]; \
-    host_output = new OUTPUT_TYPE[OUTPUT_SIZE]; \
-    CUDA_MALLOC(device_input, INPUT_SIZE, INPUT_TYPE); \
-    CUDA_MALLOC(device_output, OUTPUT_SIZE, OUTPUT_TYPE); \
-}
-
-#define CUDA_DEALLOC() { \
-    delete[] host_input; \
-    delete[] host_output; \
-    cudaFree(device_input); \
-    cudaFree(device_output); \
 }
