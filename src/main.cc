@@ -2,6 +2,7 @@
 #include "cuda_support.h"
 #include "EventTimer.h"
 #include "0.basic/00_MatMul.cuh"
+#include "ThreadPool.h"
 
 int main(int argc, char *argv[]) {
     std::vector<int*> inputs;
