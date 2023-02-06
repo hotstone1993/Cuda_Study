@@ -84,11 +84,11 @@ template <class T1>
 void copyInputs(std::vector<T1*>& inputs) {
     cudaError_t cudaStatus = cudaMemcpy(inputs[DEVICE_INPUT1], inputs[HOST_INPUT1], SIZE * SIZE * sizeof(T1), cudaMemcpyHostToDevice);
     if (cudaStatus != cudaSuccess) {
-        throw "cudaMemcpy failed! (Host to Device)";
+        throw std::runtime_error("cudaMemcpy failed! (Host to Device)");
     }
     cudaStatus = cudaMemcpy(inputs[DEVICE_INPUT2], inputs[HOST_INPUT2], SIZE * SIZE * sizeof(T1), cudaMemcpyHostToDevice);
     if (cudaStatus != cudaSuccess) {
-        throw "cudaMemcpy failed! (Host to Device)";
+        throw std::runtime_error("cudaMemcpy failed! (Host to Device)");
     }
 }
 
@@ -110,7 +110,7 @@ void setup(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
 }
 
 template <class T1, class T2>
-void destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+void basic::destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     delete[] inputs[HOST_INPUT1];
     delete[] inputs[HOST_INPUT2];
     cudaFree(inputs[DEVICE_INPUT1]);
@@ -133,15 +133,16 @@ void basic::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
 
     cudaError_t cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
-        throw "MatMul launch failed: %s\n";
+        throw std::runtime_error("MatMul launch failed: %s\n");
     }
     
     cudaStatus = cudaMemcpy(outputs[HOST_OUTPUT1], outputs[DEVICE_OUTPUT1], SIZE * SIZE * sizeof(T2), cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
-        throw "cudaMemcpy failed! (Device to Host)";
+        throw std::runtime_error("cudaMemcpy failed! (Device to Host)");
     }
 
     destroy(inputs, outputs);
 }
 
+template void basic::destroy(std::vector<int*>& inputs, std::vector<int*>& outputs);
 template void basic::run(std::vector<int*>& inputs, std::vector<int*>& outputs);

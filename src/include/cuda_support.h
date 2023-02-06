@@ -8,11 +8,11 @@ inline void initCUDA() {
     int deviceCount = 0;
     if (cudaSuccess != cudaGetDeviceCount(&deviceCount))
     {
-        throw "Do you have a CUDA-capable GPU installed?";
+        throw std::runtime_error("Do you have a CUDA-capable GPU installed?");
     }
     // only use 
     if (cudaSetDevice(0) != cudaSuccess) {
-        throw "cudaSetDevice failed!";
+        throw std::runtime_error("cudaSetDevice failed!");
     }
 }
 
@@ -20,6 +20,6 @@ inline void initCUDA() {
 #define CUDA_MALLOC(ptr, size, TYPE) {\
     cudaError_t cudaStatus = cudaMalloc((void**)&ptr, size * sizeof(TYPE)); \
     if (cudaStatus != cudaSuccess) { \
-        throw "cudaMalloc failed!"; \
+        throw std::runtime_error("cudaMalloc failed!"); \
     }\
 }

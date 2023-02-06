@@ -17,8 +17,9 @@ int main(int argc, char *argv[]) {
 
         timer.stopTimer();
         timer.printElapsedTime();
-    } catch(const char* message) {
-        std::cerr << message << std::endl;        
+    } catch(std::runtime_error& message) {
+        basic::destroy(inputs, outputs);
+        std::cerr << message.what() << std::endl;        
     }
 
     return 0;
