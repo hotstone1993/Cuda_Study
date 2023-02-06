@@ -4,6 +4,7 @@ project(CUDA_STUDY LANGUAGES CXX CUDA)
 add_executable(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/00_MatMul.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/00_MatMul_MT.cpp
 )
                 
 set_target_properties(${PROJECT_NAME} PROPERTIES

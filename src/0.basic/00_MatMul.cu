@@ -1,11 +1,12 @@
-#include "00_MatMul.cuh"
 #include "cuda_support.h"
+#include "00_MatMul.cuh"
+#include "00_MatMul_Const.h"
 
-__global__ void mulMatrix(int* c, const int* a, const int* b, const unsigned int N)
+__global__ void mulMatrix(TARGET_TYPE* c, const TARGET_TYPE* a, const TARGET_TYPE* b, const unsigned int N)
 {
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     int row = blockDim.y * blockIdx.y + threadIdx.y;
-    int sum = 0;
+    TARGET_TYPE sum = 0;
     if (row >= N && col >= N)
         return;
 
@@ -16,10 +17,10 @@ __global__ void mulMatrix(int* c, const int* a, const int* b, const unsigned int
 }
 
 
-__global__ void mulMatrixWithSharedMemory(int* c, const int* a, const int* b, const unsigned int N)
+__global__ void mulMatrixWithSharedMemory(TARGET_TYPE* c, const TARGET_TYPE* a, const TARGET_TYPE* b, const unsigned int N)
 {
-    __shared__ int  tempA[THREADS][THREADS];
-    __shared__ int  tempB[THREADS][THREADS];
+    __shared__ TARGET_TYPE  tempA[THREADS][THREADS];
+    __shared__ TARGET_TYPE  tempB[THREADS][THREADS];
 
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     int row = blockDim.y * blockIdx.y + threadIdx.y;
@@ -27,7 +28,7 @@ __global__ void mulMatrixWithSharedMemory(int* c, const int* a, const int* b, co
     int localCol = threadIdx.x;
     int localRow = threadIdx.y;
 
-    int sum = 0;
+    TARGET_TYPE sum = 0;
 
     for (unsigned int bid = 0; bid < ceil((float)N / blockDim.x); ++bid) {
         if (row < N && bid * blockDim.x + localCol < N) {
@@ -58,17 +59,6 @@ __global__ void mulMatrixWithSharedMemory(int* c, const int* a, const int* b, co
 
     c[row * N + col] = sum;
 }
-
-
-#define HOST_INPUT1 0
-#define HOST_INPUT2 1
-#define DEVICE_INPUT1 2
-#define DEVICE_INPUT2 3
-#define INPUT_COUNT 4
-
-#define HOST_OUTPUT1 0
-#define DEVICE_OUTPUT1 1
-#define OUTPUT_COUNT 2
 
 template <class T1>
 void initRandom(std::vector<T1*>& inputs) {
@@ -140,9 +130,7 @@ void basic::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     if (cudaStatus != cudaSuccess) {
         throw std::runtime_error("cudaMemcpy failed! (Device to Host)");
     }
-
-    destroy(inputs, outputs);
 }
 
-template void basic::destroy(std::vector<int*>& inputs, std::vector<int*>& outputs);
-template void basic::run(std::vector<int*>& inputs, std::vector<int*>& outputs);
+template void basic::destroy(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
+template void basic::run(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);

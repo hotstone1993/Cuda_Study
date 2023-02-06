@@ -25,8 +25,8 @@ public:
     }
 
     template <class Func, class... Args>
-    std::future<typename std::invoke_result<Func(Args...)>::type> addJob(Func&& f, Args&&... args) {
-        using returnType = typename std::invoke_result<Func(Args...)>::type;
+    std::future<typename std::result_of<Func(Args...)>::type> addJob(Func&& f, Args&&... args) {
+        using returnType = typename std::result_of<Func(Args...)>::type;
         auto job = std::make_shared<std::packaged_task<returnType()>>(std::bind(std::forward<Func>(f), std::forward<Args>(args)...));
         std::future<returnType> jobResultFuture = job->get_future();
 

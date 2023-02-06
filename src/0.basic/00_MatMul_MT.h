@@ -1,14 +1,14 @@
-#ifndef MUL_MATRIX
-#define MUL_MATRIX
+#ifndef MUL_MATRIX_MT
+#define MUL_MATRIX_MT
 
 #include <vector>
 
-namespace basic {
+namespace basic_mt {
     template <class T1, class T2>
     void run(std::vector<T1*>& inputs, std::vector<T2*>& outputs);
-    
+
     template <class T1, class T2>
     void destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs);
 }
 
-#endif
+#endif // MUL_MATRIX_MT

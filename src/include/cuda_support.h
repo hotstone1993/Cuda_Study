@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
+#include <stdexcept>
 #include <device_launch_parameters.h>
 
-#define SIZE 10000
 #define THREADS 16
 
 inline void initCUDA() {
