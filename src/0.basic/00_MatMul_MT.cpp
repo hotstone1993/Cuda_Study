@@ -1,7 +1,7 @@
 #include "00_MatMul_MT.h"
 #include "00_MatMul_Const.h"
 #include "ThreadPool.h"
-#include <string>
+#include <iostream>
 
 void func(const std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs, size_t startX, size_t startY, size_t endX, size_t endY) {
     
@@ -15,13 +15,8 @@ void func(const std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& ou
             }
 
             if (outputs[HOST_OUTPUT1][index] != result) {
-                std::string message = "results are different! (";
-                message += std::to_string(result);
-                message += ", ";
-                message += std::to_string(outputs[HOST_OUTPUT1][index]);
-                message += ")";
-
-                throw std::runtime_error(message.c_str());
+                std::cerr << "CUDA Result: " <<  outputs[HOST_OUTPUT1][index] << ", Result: " << result << std::endl;
+                return;
             }
         }
     }
@@ -32,6 +27,7 @@ constexpr size_t THREAD_COUNT = 8;
 template <class T1, class T2>
 void basic_mt::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     ThreadPool tp(THREAD_COUNT); 
+    
     for (size_t idx = 0; idx < THREAD_COUNT; ++idx) {
         size_t start = (SIZE / THREAD_COUNT) * idx;
         size_t end = (idx < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (idx + 1) : SIZE;

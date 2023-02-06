@@ -8,6 +8,7 @@
 #define DEVICE_OUTPUT1 1
 #define OUTPUT_COUNT 2
 
+#define THREADS 16
 #define SIZE 1000
 
 typedef int TARGET_TYPE;

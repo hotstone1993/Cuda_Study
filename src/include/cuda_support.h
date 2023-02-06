@@ -2,8 +2,6 @@
 #include <stdexcept>
 #include <device_launch_parameters.h>
 
-#define THREADS 16
-
 inline void initCUDA() {
     int deviceCount = 0;
     if (cudaSuccess != cudaGetDeviceCount(&deviceCount))
