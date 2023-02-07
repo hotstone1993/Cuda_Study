@@ -15,8 +15,7 @@ void func(const std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& ou
             }
 
             if (outputs[HOST_OUTPUT1][index] != result) {
-                std::cerr << "CUDA Result: " <<  outputs[HOST_OUTPUT1][index] << ", Result: " << result << std::endl;
-                return;
+                std::cerr << "CUDA Result: " <<  outputs[HOST_OUTPUT1][index] << ", outputs[HOST_OUTPUT1][index]: " << result << std::endl;
             }
         }
     }
@@ -28,10 +27,14 @@ template <class T1, class T2>
 void basic_mt::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     ThreadPool tp(THREAD_COUNT); 
     
-    for (size_t idx = 0; idx < THREAD_COUNT; ++idx) {
-        size_t start = (SIZE / THREAD_COUNT) * idx;
-        size_t end = (idx < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (idx + 1) : SIZE;
-        tp.addJob(func, inputs, outputs, start, start, end, end);
+    for (size_t y = 0; y < THREAD_COUNT; ++y) {
+        size_t yStart = (SIZE / THREAD_COUNT) * y;
+        size_t yEnd = (y < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (y + 1) : SIZE;
+        for (size_t x = 0; x < THREAD_COUNT; ++x) { 
+            size_t xStart = (SIZE / THREAD_COUNT) * x;
+            size_t xEnd = (x < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (x + 1) : SIZE;
+            tp.addJob(func, inputs, outputs, xStart, yStart, xEnd, yEnd);
+        }
     }
 }
 

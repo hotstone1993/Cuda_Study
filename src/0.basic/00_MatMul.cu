@@ -6,12 +6,14 @@ __global__ void mulMatrix(TARGET_TYPE* c, const TARGET_TYPE* a, const TARGET_TYP
 {
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     int row = blockDim.y * blockIdx.y + threadIdx.y;
-    TARGET_TYPE sum = 0;
-    if (row >= N && col >= N)
+    
+    if (row >= N || col >= N)
         return;
+    
+    TARGET_TYPE sum = 0;
 
     for (unsigned int idx = 0; idx < N; ++idx) {
-        sum += (a[row * N + idx] * b[N * idx + col]);
+        sum += (a[N * row + idx] * b[idx * N + col]);
     }
     c[row * N + col] = sum;
 }
@@ -19,8 +21,8 @@ __global__ void mulMatrix(TARGET_TYPE* c, const TARGET_TYPE* a, const TARGET_TYP
 
 __global__ void mulMatrixWithSharedMemory(TARGET_TYPE* c, const TARGET_TYPE* a, const TARGET_TYPE* b, const unsigned int N)
 {
-    __shared__ TARGET_TYPE  tempA[THREADS][THREADS];
-    __shared__ TARGET_TYPE  tempB[THREADS][THREADS];
+    __shared__ TARGET_TYPE tempA[THREADS][THREADS];
+    __shared__ TARGET_TYPE tempB[THREADS][THREADS];
 
     int col = blockDim.x * blockIdx.x + threadIdx.x;
     int row = blockDim.y * blockIdx.y + threadIdx.y;
@@ -54,10 +56,10 @@ __global__ void mulMatrixWithSharedMemory(TARGET_TYPE* c, const TARGET_TYPE* a, 
         __syncthreads();
     }
 
-    if (row >= N && col >= N)
+    if (row >= N || col >= N)
         return;
 
-    c[row * N + col] = sum;
+    c[row * N + col] += sum;
 }
 
 template <class T1>
