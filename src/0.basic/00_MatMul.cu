@@ -85,7 +85,7 @@ void copyInputs(std::vector<T1*>& inputs) {
 }
 
 template <class T1, class T2>
-void setup(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+void basic::setup(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     inputs.resize(INPUT_COUNT);
     outputs.resize(OUTPUT_COUNT);
 
@@ -114,8 +114,6 @@ void basic::destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
 
 template <class T1, class T2>
 void basic::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    setup(inputs, outputs);
-
     int face = (SIZE + THREADS - 1) / THREADS;
     dim3 gridDim(face, face);
     dim3 blockDim(THREADS, THREADS);
@@ -134,5 +132,6 @@ void basic::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     }
 }
 
+template void basic::setup(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
 template void basic::destroy(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
 template void basic::run(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);

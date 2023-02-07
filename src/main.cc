@@ -11,12 +11,14 @@ int main(int argc, char *argv[]) {
     try {
         EventTimer timer;
         initCUDA();
+        basic::setup(inputs, outputs);
+
         timer.startTimer();
-
         basic::run(inputs, outputs);
-
         timer.stopTimer();
+
         timer.printElapsedTime();
+
     } catch(std::runtime_error& message) {
         basic::destroy(inputs, outputs);
         std::cerr << message.what() << std::endl;        
@@ -24,11 +26,11 @@ int main(int argc, char *argv[]) {
     
     try {
         EventTimer timer;
+        
         timer.startTimer();
-
         basic_mt::run(inputs, outputs);
-
         timer.stopTimer();
+
         timer.printElapsedTime();
     } catch(std::runtime_error& message) {
         basic_mt::destroy(inputs, outputs);
