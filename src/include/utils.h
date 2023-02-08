@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
 
 
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
@@ -14,4 +15,26 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_
     return std::fabs(x-y) <= std::numeric_limits<T>::epsilon() * std::fabs(x+y) * ulp
         // unless the result is subnormal
         || std::fabs(x-y) < std::numeric_limits<T>::min();
+}
+
+
+typedef int TARGET_TYPE;
+
+#define RUN(NAMESPACE, INPUTS, OUTPUTS) { \
+    EventTimer timer; \ 
+    NAMESPACE::setup(INPUTS, OUTPUTS); \
+    \
+    timer.startTimer(); \
+    timer.startTimer(); \
+    NAMESPACE::run(INPUTS, OUTPUTS); \
+    timer.stopTimer(); \
+    timer.printElapsedTime(); \
+    \
+    timer.startTimer(); \
+    timer.startTimer(); \
+    NAMESPACE##_mt::run(INPUTS, OUTPUTS); \
+    timer.stopTimer(); \
+    timer.printElapsedTime(); \
+    \
+    NAMESPACE::destroy(INPUTS, OUTPUTS); \
 }

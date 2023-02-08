@@ -1,5 +1,4 @@
 #include <cuda_runtime.h>
-#include <stdexcept>
 #include <device_launch_parameters.h>
 
 inline void initCUDA() {

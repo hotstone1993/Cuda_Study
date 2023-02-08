@@ -1,10 +1,10 @@
 #include "00_MatMul_MT.h"
-#include "00_MatMul_Const.h"
 #include "ThreadPool.h"
+#include "00_MatMul_Const.h"
+#include "utils.h"
 #include <iostream>
 
 void func(const std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs, size_t startX, size_t startY, size_t endX, size_t endY) {
-    
     for (size_t y = startY; y < endY; ++y) {
         for (size_t x = startX; x < endX; ++x) {
             int result = 0;
@@ -15,7 +15,7 @@ void func(const std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& ou
             }
 
             if (outputs[HOST_OUTPUT1][index] != result) {
-                std::cerr << "CUDA Result: " <<  outputs[HOST_OUTPUT1][index] << ", outputs[HOST_OUTPUT1][index]: " << result << std::endl;
+                std::cerr << "CUDA Result: " <<  outputs[HOST_OUTPUT1][index] << ", result: " << result << std::endl;
             }
         }
     }
@@ -38,9 +38,4 @@ void basic_mt::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     }
 }
 
-template <class T1, class T2>
-void basic_mt::destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-}
-
 template void basic_mt::run(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
-template void basic_mt::destroy(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
