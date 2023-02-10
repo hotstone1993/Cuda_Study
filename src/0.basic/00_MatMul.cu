@@ -1,6 +1,4 @@
 #include "00_MatMul.cuh"
-#include "00_MatMul_Const.h"
-#include "utils.h"
 
 __global__ void mulMatrix(TARGET_TYPE* c, const TARGET_TYPE* a, const TARGET_TYPE* b, const unsigned int N)
 {

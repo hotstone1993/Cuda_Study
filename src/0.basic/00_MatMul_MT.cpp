@@ -1,8 +1,4 @@
 #include "00_MatMul_MT.h"
-#include "ThreadPool.h"
-#include "00_MatMul_Const.h"
-#include "utils.h"
-#include <iostream>
 
 void func(const std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs, size_t startX, size_t startY, size_t endX, size_t endY) {
     for (size_t y = startY; y < endY; ++y) {

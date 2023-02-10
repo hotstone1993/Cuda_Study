@@ -1,7 +1,7 @@
 #ifndef MUL_MATRIX
 #define MUL_MATRIX
 
-#include <vector>
+#include "00_MatMul_Const.h"
 
 namespace basic {
     template <class T1, class T2>

@@ -1,3 +1,6 @@
+#ifndef UTILS
+#define UTILS
+
 #include <cmath>
 #include <limits>
 #include <iostream>
@@ -5,7 +8,29 @@
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+#include "ThreadPool.h"
+#include "EventTimer.h"
 
+inline void initCUDA() {
+    int deviceCount = 0;
+    if (cudaSuccess != cudaGetDeviceCount(&deviceCount))
+    {
+        throw std::runtime_error("Do you have a CUDA-capable GPU installed?");
+    }
+    // only use 
+    if (cudaSetDevice(0) != cudaSuccess) {
+        throw std::runtime_error("cudaSetDevice failed!");
+    }
+}
+
+#define CUDA_MALLOC(ptr, size, TYPE) {\
+    cudaError_t cudaStatus = cudaMalloc((void**)&ptr, size * sizeof(TYPE)); \
+    if (cudaStatus != cudaSuccess) { \
+        throw std::runtime_error("cudaMalloc failed!"); \
+    }\
+}
 
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 template<class T>
@@ -17,24 +42,4 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_
         || std::fabs(x-y) < std::numeric_limits<T>::min();
 }
 
-
-typedef int TARGET_TYPE;
-
-#define RUN(NAMESPACE, INPUTS, OUTPUTS) { \
-    EventTimer timer; \ 
-    NAMESPACE::setup(INPUTS, OUTPUTS); \
-    \
-    timer.startTimer(); \
-    timer.startTimer(); \
-    NAMESPACE::run(INPUTS, OUTPUTS); \
-    timer.stopTimer(); \
-    timer.printElapsedTime(); \
-    \
-    timer.startTimer(); \
-    timer.startTimer(); \
-    NAMESPACE##_mt::run(INPUTS, OUTPUTS); \
-    timer.stopTimer(); \
-    timer.printElapsedTime(); \
-    \
-    NAMESPACE::destroy(INPUTS, OUTPUTS); \
-}
+#endif // UTILS

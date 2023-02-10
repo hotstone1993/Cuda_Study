@@ -2,13 +2,8 @@
 #ifndef MUL_MATRIX_SETUP
 #define MUL_MATRIX_SETUP
 
-#include <vector>
-
-#include "cuda_support.h"
-#include "EventTimer.h"
-#include "00_MatMul_Const.h"
-#include "0.basic/00_MatMul.cuh"
-#include "0.basic/00_MatMul_MT.h"
+#include "00_MatMul_MT.h"
+#include "00_MatMul.cuh"
 
 namespace basic {
     template <class T1>
