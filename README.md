@@ -1,5 +1,5 @@
 # Cuda_Study
-This repository is for studying cuda.
+This repository is for studying CUDA.
 
 How to build?
 
