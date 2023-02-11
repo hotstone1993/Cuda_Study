@@ -20,7 +20,7 @@ void func(const std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& ou
 constexpr size_t THREAD_COUNT = 8;
 
 template <class T1, class T2>
-void basic_mt::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+void basic::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     ThreadPool tp(THREAD_COUNT); 
     
     for (size_t y = 0; y < THREAD_COUNT; ++y) {
@@ -34,4 +34,4 @@ void basic_mt::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     }
 }
 
-template void basic_mt::run(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
+template void basic::run_mt(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);

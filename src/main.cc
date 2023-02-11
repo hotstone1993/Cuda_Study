@@ -5,9 +5,9 @@ int main(int argc, char *argv[]) {
     std::vector<TARGET_TYPE*> outputs;
 
     try {
-        RUN(basic, inputs, outputs)
+        RUN(inputs, outputs)
     } catch(std::runtime_error& message) {
-        DESTROY(basic, inputs, outputs)     
+        DESTROY(inputs, outputs)     
     }
 
     return 0;
