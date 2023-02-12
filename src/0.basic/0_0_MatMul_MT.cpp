@@ -1,9 +1,9 @@
 #include "0_0_MatMul_MT.h"
 
-void func(const std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs, size_t startX, size_t startY, size_t endX, size_t endY) {
+void func(const std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs, size_t startX, size_t startY, size_t endX, size_t endY) {
     for (size_t y = startY; y < endY; ++y) {
         for (size_t x = startX; x < endX; ++x) {
-            int result = 0;
+            TARGET_OUTPUT_TYPE result = 0;
             size_t index = SIZE * y + x;
 
             for (size_t k = 0; k < SIZE; ++k) {
@@ -34,4 +34,4 @@ void basic::matmul::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) 
     }
 }
 
-template void basic::matmul::run_mt(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
+template void basic::matmul::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);

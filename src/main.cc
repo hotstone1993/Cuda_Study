@@ -1,8 +1,8 @@
 #include "macro.h"
 
 int main(int argc, char *argv[]) {
-    std::vector<TARGET_TYPE*> inputs;
-    std::vector<TARGET_TYPE*> outputs;
+    std::vector<TARGET_INPUT_TYPE*> inputs;
+    std::vector<TARGET_OUTPUT_TYPE*> outputs;
 
     try {
         RUN(inputs, outputs)

@@ -11,6 +11,7 @@
 #define THREADS 16
 #define SIZE 1000
 
-typedef int TARGET_TYPE;
+typedef int TARGET_INPUT_TYPE;
+typedef int TARGET_OUTPUT_TYPE;
 
 #include "utils.h"
