@@ -63,7 +63,7 @@ __global__ void mulMatrixWithSharedMemory(TARGET_TYPE* c, const TARGET_TYPE* a, 
 
 
 template <class T1, class T2>
-void basic::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+void basic::matmul::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     int face = (SIZE + THREADS - 1) / THREADS;
     dim3 gridDim(face, face);
     dim3 blockDim(THREADS, THREADS);
@@ -82,4 +82,4 @@ void basic::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     }
 }
 
-template void basic::run(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
+template void basic::matmul::run(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
