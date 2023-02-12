@@ -69,7 +69,6 @@ void basic::matmul::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     dim3 blockDim(THREADS, THREADS);
 
     mulMatrixWithSharedMemory<<<gridDim, blockDim>>>(outputs[DEVICE_OUTPUT1], inputs[DEVICE_INPUT1], inputs[DEVICE_INPUT2], SIZE);
-    cudaDeviceSynchronize();
 
     cudaError_t cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
