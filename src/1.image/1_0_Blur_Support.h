@@ -6,6 +6,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 namespace image::blur {
     template <class T1>
@@ -48,6 +50,13 @@ namespace image::blur {
         
     template <class T1, class T2>
     void destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+        stbi_write_jpg("blured_MT_result.jpg", 
+                    *inputs[IMAGE_WIDTH], 
+                    *inputs[IMAGE_HEIGHT], 
+                    *inputs[IMAGE_STRIDE], 
+                    inputs[HOST_INPUT], 100
+                );
+
         delete inputs[IMAGE_WIDTH];
         delete inputs[IMAGE_HEIGHT];
         delete inputs[IMAGE_STRIDE];
