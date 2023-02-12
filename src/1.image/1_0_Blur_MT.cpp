@@ -7,4 +7,4 @@ void image::blur::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     ThreadPool tp(THREAD_COUNT);
 }
 
-template void image::blur::run_mt(std::vector<TARGET_TYPE*>& inputs, std::vector<TARGET_TYPE*>& outputs);
+template void image::blur::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
