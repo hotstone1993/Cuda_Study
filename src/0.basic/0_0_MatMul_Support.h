@@ -2,8 +2,8 @@
 #ifndef MUL_MATRIX_SETUP
 #define MUL_MATRIX_SETUP
 
-#include "00_MatMul_MT.h"
-#include "00_MatMul.cuh"
+#include "0_0_MatMul_MT.h"
+#include "0_0_MatMul.cuh"
 
 namespace basic::matmul {
     template <class T1>
