@@ -16,6 +16,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_include_directories( ${PROJECT_NAME} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/include 
+    ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/stb
 )
 
 if(MSVC)
