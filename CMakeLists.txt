@@ -5,6 +5,8 @@ add_executable(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/0_0_MatMul.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/0_0_MatMul_MT.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/1.image/1_0_Blur.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/1.image/1_0_Blur_MT.cpp
 )
                 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -16,6 +18,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_include_directories( ${PROJECT_NAME} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/include 
+    ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/stb
 )
 
 if(MSVC)

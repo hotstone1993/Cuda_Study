@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include <stdint.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include "ThreadPool.h"
