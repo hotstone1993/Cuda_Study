@@ -9,8 +9,7 @@
 #define DEVICE_OUTPUT 1
 #define OUTPUT_COUNT 2
 
-#define THREADS 16
-#define SIZE 1000
+#define THREADS 32
 
 #include "utils.h"
 
