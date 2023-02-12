@@ -5,7 +5,7 @@
 #include "00_MatMul_MT.h"
 #include "00_MatMul.cuh"
 
-namespace basic {
+namespace basic::matmul {
     template <class T1>
     void initRandom(std::vector<T1*>& inputs) {
         srand(static_cast<unsigned int>(time(nullptr)));

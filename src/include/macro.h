@@ -1,6 +1,6 @@
 #include "0.basic/00_MatMul_Support.h"
 
-#define TARGET_NAMESPACE basic
+#define TARGET_NAMESPACE basic::matmul
 
 #define RUN(INPUTS, OUTPUTS) { \
     initCUDA(); \
