@@ -60,20 +60,22 @@ __device__ void horizontalBlur(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* i
     target.b = sum.b;
 }
 
-__global__ void blurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* image, int w, int h, int pixelStride) {
+__global__ void blurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* image, int w, int h, int pixelStride, int intensity) {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
 
     if (x >= w || y >= h)
         return;
-    verticalBlur(result, image, x, y, w, h, 10);
-    horizontalBlur(result, image, x, y, w, h, 10);
+    verticalBlur(result, image, x, y, w, h, intensity);
+    horizontalBlur(result, image, x, y, w, h, intensity);
 }
 
 template <class T1, class T2>
 void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     int blockWidthCount = (*inputs[IMAGE_WIDTH] + THREADS - 1) / THREADS;
     int blockHeightCount = (*inputs[IMAGE_HEIGHT] + THREADS - 1) / THREADS;
+    int intensity = 10;
+
     dim3 gridDim(blockWidthCount, blockHeightCount);
     dim3 blockDim(THREADS, THREADS);
 
@@ -81,7 +83,8 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
                                 , reinterpret_cast<T2*>(inputs[DEVICE_INPUT])
                                 , *inputs[IMAGE_WIDTH]
                                 , *inputs[IMAGE_HEIGHT]
-                                , *inputs[IMAGE_STRIDE]);
+                                , *inputs[IMAGE_STRIDE]
+                                , intensity);
                                 
     cudaError_t cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
