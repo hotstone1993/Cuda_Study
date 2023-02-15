@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(CUDA_STUDY LANGUAGES CXX CUDA)
 
 add_executable(${PROJECT_NAME}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/0_0_MatMul.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/0_0_MatMul_MT.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/1.image/1_0_Blur.cu
@@ -11,7 +11,7 @@ add_executable(${PROJECT_NAME}
                 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 20
-    CUDA_STANDARD 14
+    CUDA_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CUDA_ARCHITECTURES 75
 )
@@ -20,6 +20,8 @@ target_include_directories( ${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/include 
     ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/stb
 )
+
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -allow-unsupported-compiler")
 
 if(MSVC)
     find_package(CUDA)
