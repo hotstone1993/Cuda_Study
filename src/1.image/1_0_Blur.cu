@@ -11,10 +11,26 @@ struct pixelStorage {
     uint32_t g = 0;
     uint32_t b = 0;
 
+    __device__ pixelStorage(const pixel& other): r(other.r), g(other.g), b(other.b) {}
+    __device__ pixelStorage(const pixelStorage& other): r(other.r), g(other.g), b(other.b) {}
+
     __device__ void operator+=(const pixel& other) {
         r += other.r;
         g += other.g;
         b += other.b;
+    }
+
+    __device__ void operator-=(const pixel& other) {
+        r -= other.r;
+        g -= other.g;
+        b -= other.b;
+    }
+    
+    __device__ pixelStorage operator/(int value) {
+        pixelStorage newStorage(*this);
+        newStorage /= value;
+
+        return newStorage;
     }
     
     __device__ void operator/=(int value) {
@@ -22,77 +38,122 @@ struct pixelStorage {
         g /= value;
         b /= value;
     }
+    
+    __device__ void operator*=(int value) {
+        r *= value;
+        g *= value;
+        b *= value;
+    }
 };
 
-__device__ void verticalBlur(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* image, int x, int y, int w, int h, int intensity) {
-    pixelStorage sum;
-    int count = 0;
-
-    for (int idx = y - intensity; idx <= y + intensity; ++idx) {
-        if (idx < 0 || idx >= h)
-            continue;
-        ++count;
-        sum += reinterpret_cast<pixel*>(image)[idx * w + x];
-    }
-    sum /= count;
-
-    pixel& target = reinterpret_cast<pixel*>(result)[y * w + x];
-    target.r = sum.r;
-    target.g = sum.g;
-    target.b = sum.b;
+__device__ inline void setPixel(pixel& target, pixelStorage result) {
+    target.r = result.r;
+    target.g = result.g;
+    target.b = result.b;
 }
 
-__device__ void horizontalBlur(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* image, int x, int y, int w, int h, int intensity) {
-    pixelStorage sum;
-    int count = 0;
-
-    for (int idx = x - intensity; idx <= x + intensity; ++idx) {
-        if (idx < 0 || idx >= w)
-            continue;
-        ++count;
-        sum += reinterpret_cast<pixel*>(image)[y * w + idx];
-    }
-    sum /= count;
-
-    pixel& target = reinterpret_cast<pixel*>(result)[y * w + x];
-    target.r = sum.r;
-    target.g = sum.g;
-    target.b = sum.b;
-}
-
-__global__ void blurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* image, int w, int h, int pixelStride, int intensity) {
+__global__ void verticalBlurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* image, int w, int h, int intensity) {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
-    int y = blockDim.y * blockIdx.y + threadIdx.y;
+    pixel* input = reinterpret_cast<pixel*>(image);
+    pixel* output = reinterpret_cast<pixel*>(result);
 
-    if (x >= w || y >= h)
+    if (x >= w)
         return;
-    verticalBlur(result, image, x, y, w, h, intensity);
-    horizontalBlur(result, image, x, y, w, h, intensity);
+
+    float scale = (float)((intensity << 1) + 1);
+    pixelStorage sum = input[x];
+    sum *= intensity;
+
+    for (size_t y = 0; y < intensity + 1; ++y) {
+        sum += input[y * w + x];
+    }
+    setPixel(output[x], sum / scale);
+
+    for (size_t y = 1; y < intensity + 1; ++y) {
+        sum -= input[x];
+        sum += input[(y + intensity) * w + x];
+        setPixel(output[y * w + x], sum / scale);
+    }
+
+    for (size_t y = intensity + 1; y < h - intensity; ++y) {
+        sum -= input[(y - intensity - 1) * w + x];
+        sum += input[(y + intensity) * w + x];
+        setPixel(output[y * w + x], sum / scale);
+    }
+
+    for (size_t y = h - intensity; y < h; ++y) {
+        sum -= input[(h - 1) * w + x];
+        sum += input[(y + intensity) * w + x];
+        setPixel(output[y * w + x], sum / scale);
+    }
+}
+
+__global__ void horizontalBlurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* image, int w, int h, int intensity) {
+    int y = blockDim.x * blockIdx.x + threadIdx.x;
+    pixel* input = reinterpret_cast<pixel*>(image);
+    pixel* output = reinterpret_cast<pixel*>(result);
+
+    if (y >= h)
+        return;
+
+    float scale = (float)((intensity << 1) + 1);
+    pixelStorage sum = input[y * w];
+    sum *= intensity;
+
+    for (size_t x = 0; x < intensity + 1; ++x) {
+        sum += input[y * w + x];
+    }
+    setPixel(output[y * w], sum / scale);
+
+    for (size_t x = 1; x < intensity + 1; ++x) {
+        sum -= input[y * w];
+        sum += input[y * w + x + intensity];
+        setPixel(output[y * w + x], sum / scale);
+    }
+
+    for (size_t x = intensity + 1; x < w - intensity; ++x) {
+        sum -= input[y * w + x - intensity - 1];
+        sum += input[y * w + x + intensity];
+        setPixel(output[y * w + x], sum / scale);
+    }
+
+    for (size_t x = w - intensity; x < w; ++x) {
+        sum -= input[y * w + x - intensity - 1];
+        sum += input[(y + 1) * w - 1];
+        setPixel(output[y * w + x], sum / scale);
+    }
 }
 
 template <class T1, class T2>
 void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    int blockWidthCount = (*inputs[IMAGE_WIDTH] + THREADS - 1) / THREADS;
-    int blockHeightCount = (*inputs[IMAGE_HEIGHT] + THREADS - 1) / THREADS;
-    int intensity = 10;
+    int intensity = 50;
+    int width = *inputs[IMAGE_WIDTH];
+    int height = *inputs[IMAGE_HEIGHT];
 
-    dim3 gridDim(blockWidthCount, blockHeightCount);
-    dim3 blockDim(THREADS, THREADS);
-
-    blurImage<<<gridDim, blockDim>>>(outputs[DEVICE_OUTPUT]
+    verticalBlurImage<<<width / (THREADS - 1), THREADS>>>(outputs[DEVICE_OUTPUT]
                                 , reinterpret_cast<T2*>(inputs[DEVICE_INPUT])
-                                , *inputs[IMAGE_WIDTH]
-                                , *inputs[IMAGE_HEIGHT]
-                                , *inputs[IMAGE_STRIDE]
+                                , width
+                                , height
                                 , intensity);
                                 
     cudaError_t cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
         throw std::runtime_error("MatMul launch failed\n");
     }
+
+    horizontalBlurImage<<<height / (THREADS - 1), THREADS>>>(reinterpret_cast<T2*>(inputs[DEVICE_INPUT])
+                                , outputs[DEVICE_OUTPUT]
+                                , width
+                                , height
+                                , intensity);
+                                
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        throw std::runtime_error("MatMul launch failed\n");
+    }
     
     cudaStatus = cudaMemcpy(outputs[HOST_OUTPUT]
-                            , outputs[DEVICE_OUTPUT]
+                            , reinterpret_cast<T2*>(inputs[DEVICE_INPUT])
                             , (*inputs[IMAGE_WIDTH]) * (*inputs[IMAGE_HEIGHT]) * (*inputs[IMAGE_STRIDE]) * sizeof(T2)
                             , cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
