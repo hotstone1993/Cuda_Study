@@ -82,8 +82,8 @@ __global__ void verticalBlurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE
     }
 
     for (size_t y = h - intensity; y < h; ++y) {
-        sum -= input[(h - 1) * w + x];
-        sum += input[(y + intensity) * w + x];
+        sum += input[(h - 1) * w + x];
+        sum -= input[(y - intensity - 1) * w + x];
         setPixel(output[y * w + x], sum / scale);
     }
 }
