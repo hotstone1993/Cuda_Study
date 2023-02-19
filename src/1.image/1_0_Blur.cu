@@ -126,12 +126,14 @@ __global__ void horizontalBlurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TY
 
 template <class T1, class T2>
 void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    int intensity = 50;
+    int intensity = 500;
     int width = *inputs[IMAGE_WIDTH];
     int height = *inputs[IMAGE_HEIGHT];
+    TARGET_OUTPUT_TYPE* buffer1 = reinterpret_cast<T2*>(inputs[DEVICE_INPUT]);
+    TARGET_OUTPUT_TYPE* buffer2 = outputs[DEVICE_OUTPUT];
 
-    verticalBlurImage<<<width / (THREADS - 1), THREADS>>>(outputs[DEVICE_OUTPUT]
-                                , reinterpret_cast<T2*>(inputs[DEVICE_INPUT])
+    verticalBlurImage<<<width / (THREADS - 1), THREADS>>>(buffer2
+                                , buffer1
                                 , width
                                 , height
                                 , intensity);
@@ -141,8 +143,8 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         throw std::runtime_error("MatMul launch failed\n");
     }
 
-    horizontalBlurImage<<<height / (THREADS - 1), THREADS>>>(reinterpret_cast<T2*>(inputs[DEVICE_INPUT])
-                                , outputs[DEVICE_OUTPUT]
+    horizontalBlurImage<<<height / (THREADS - 1), THREADS>>>(buffer1
+                                , buffer2
                                 , width
                                 , height
                                 , intensity);
@@ -153,8 +155,8 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     }
     
     cudaStatus = cudaMemcpy(outputs[HOST_OUTPUT]
-                            , reinterpret_cast<T2*>(inputs[DEVICE_INPUT])
-                            , (*inputs[IMAGE_WIDTH]) * (*inputs[IMAGE_HEIGHT]) * (*inputs[IMAGE_STRIDE]) * sizeof(T2)
+                            , buffer1
+                            , width * height * (*inputs[IMAGE_STRIDE]) * sizeof(T2)
                             , cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
         throw std::runtime_error("cudaMemcpy failed! (Device to Host)");
