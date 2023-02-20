@@ -4,9 +4,14 @@ constexpr size_t THREAD_COUNT = 8;
 
 template <class T1, class T2>
 void image::blur::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    ThreadPool tp(THREAD_COUNT);
-
+    std::exception_ptr error;
+    {
+        ThreadPool tp(THREAD_COUNT, error);
+    }
     
+    if (error) {
+        std::rethrow_exception(error);
+    }
 }
 
 template void image::blur::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);

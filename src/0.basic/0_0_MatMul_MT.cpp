@@ -11,7 +11,12 @@ void func(const std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTP
             }
 
             if (outputs[HOST_OUTPUT1][index] != result) {
-                std::cerr << "CUDA Result: " <<  outputs[HOST_OUTPUT1][index] << ", result: " << result << std::endl;
+                std::string errorString = "CUDA Result: ";
+                errorString += std::to_string(outputs[HOST_OUTPUT1][index]);
+                errorString += ", result: ";
+                errorString += std::to_string(result);
+
+                throw std::runtime_error(errorString);
             }
         }
     }
@@ -21,16 +26,23 @@ constexpr size_t THREAD_COUNT = 8;
 
 template <class T1, class T2>
 void basic::matmul::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    ThreadPool tp(THREAD_COUNT); 
-    
-    for (size_t y = 0; y < THREAD_COUNT; ++y) {
-        size_t yStart = (SIZE / THREAD_COUNT) * y;
-        size_t yEnd = (y < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (y + 1) : SIZE;
-        for (size_t x = 0; x < THREAD_COUNT; ++x) { 
-            size_t xStart = (SIZE / THREAD_COUNT) * x;
-            size_t xEnd = (x < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (x + 1) : SIZE;
-            tp.addJob(func, inputs, outputs, xStart, yStart, xEnd, yEnd);
+    std::exception_ptr error;
+    {
+        ThreadPool tp(THREAD_COUNT, error); 
+        
+        for (size_t y = 0; y < THREAD_COUNT; ++y) {
+            size_t yStart = (SIZE / THREAD_COUNT) * y;
+            size_t yEnd = (y < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (y + 1) : SIZE;
+            for (size_t x = 0; x < THREAD_COUNT; ++x) { 
+                size_t xStart = (SIZE / THREAD_COUNT) * x;
+                size_t xEnd = (x < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (x + 1) : SIZE;
+                
+                tp.addJob(func, inputs, outputs, xStart, yStart, xEnd, yEnd);
+            }
         }
+    }
+    if (error) {
+        std::rethrow_exception(error);
     }
 }
 

@@ -12,11 +12,15 @@
 
 class ThreadPool {
 public:
-    ThreadPool(size_t count) {
+    ThreadPool(size_t count, std::exception_ptr& err): err(err) {
         for (size_t idx = 0; idx < count; ++idx) {
             threads.emplace_back([&]() {
-                work();
-             });
+                try {
+                    work();
+                } catch (...) {
+                    err = std::current_exception();
+                }
+            });
         }
     }
 
@@ -78,7 +82,8 @@ private:
     std::condition_variable cv;
     std::vector<std::thread> threads;
     std::queue<std::function<void()>> jobQueue;
-
+    std::exception_ptr& err;
+    
     bool isFinish = false;
 };
 
