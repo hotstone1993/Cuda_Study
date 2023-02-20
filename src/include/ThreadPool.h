@@ -12,14 +12,10 @@
 
 class ThreadPool {
 public:
-    ThreadPool(size_t count, std::exception_ptr& err): err(err) {
+    ThreadPool(size_t count) {
         for (size_t idx = 0; idx < count; ++idx) {
             threads.emplace_back([&]() {
-                try {
-                    work();
-                } catch (...) {
-                    err = std::current_exception();
-                }
+                work();
             });
         }
     }
@@ -33,11 +29,10 @@ public:
         using returnType = typename std::result_of<Func(Args...)>::type;
         auto job = std::make_shared<std::packaged_task<returnType()>>(std::bind(std::forward<Func>(f), std::forward<Args>(args)...));
         std::future<returnType> jobResultFuture = job->get_future();
-
         m.lock();
-        jobQueue.push([job]() {
-            (*job)();
-        });
+        
+        (*job)();
+
         m.unlock();
 
         cv.notify_one();
@@ -82,7 +77,6 @@ private:
     std::condition_variable cv;
     std::vector<std::thread> threads;
     std::queue<std::function<void()>> jobQueue;
-    std::exception_ptr& err;
     
     bool isFinish = false;
 };

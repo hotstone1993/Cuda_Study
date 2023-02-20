@@ -26,23 +26,23 @@ constexpr size_t THREAD_COUNT = 8;
 
 template <class T1, class T2>
 void basic::matmul::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    std::exception_ptr error;
-    {
-        ThreadPool tp(THREAD_COUNT, error); 
-        
-        for (size_t y = 0; y < THREAD_COUNT; ++y) {
-            size_t yStart = (SIZE / THREAD_COUNT) * y;
-            size_t yEnd = (y < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (y + 1) : SIZE;
-            for (size_t x = 0; x < THREAD_COUNT; ++x) { 
-                size_t xStart = (SIZE / THREAD_COUNT) * x;
-                size_t xEnd = (x < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (x + 1) : SIZE;
-                
-                tp.addJob(func, inputs, outputs, xStart, yStart, xEnd, yEnd);
-            }
+    std::vector<std::future<void>> futures;
+    
+    ThreadPool tp(THREAD_COUNT); 
+    
+    for (size_t y = 0; y < THREAD_COUNT; ++y) {
+        size_t yStart = (SIZE / THREAD_COUNT) * y;
+        size_t yEnd = (y < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (y + 1) : SIZE;
+        for (size_t x = 0; x < THREAD_COUNT; ++x) { 
+            size_t xStart = (SIZE / THREAD_COUNT) * x;
+            size_t xEnd = (x < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (x + 1) : SIZE;
+            
+            futures.emplace_back(tp.addJob(func, inputs, outputs, xStart, yStart, xEnd, yEnd));
         }
     }
-    if (error) {
-        std::rethrow_exception(error);
+
+    for (auto& f : futures) {
+        f.get(); // for exception
     }
 }
 
