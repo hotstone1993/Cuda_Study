@@ -5,7 +5,7 @@
 
 #define RUN(INPUTS, OUTPUTS) { \
     initCUDA(); \
-    EventTimer timer; \ 
+    EventTimer timer; \
     TARGET_NAMESPACE::setup(INPUTS, OUTPUTS); \
     \
     timer.startTimer(); \
