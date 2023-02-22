@@ -126,9 +126,9 @@ __global__ void horizontalBlurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TY
 
 template <class T1, class T2>
 void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    int intensity = 500;
     int width = *inputs[IMAGE_WIDTH];
     int height = *inputs[IMAGE_HEIGHT];
+    int intensity = 500;
     TARGET_OUTPUT_TYPE* buffer1 = reinterpret_cast<T2*>(inputs[DEVICE_INPUT]);
     TARGET_OUTPUT_TYPE* buffer2 = outputs[DEVICE_OUTPUT];
 
