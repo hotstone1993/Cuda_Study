@@ -154,13 +154,13 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         throw std::runtime_error("MatMul launch failed\n");
     }
     
-    cudaStatus = cudaMemcpy(outputs[HOST_OUTPUT]
-                            , buffer1
-                            , width * height * (*inputs[IMAGE_STRIDE]) * sizeof(T2)
-                            , cudaMemcpyDeviceToHost);
-    if (cudaStatus != cudaSuccess) {
-        throw std::runtime_error("cudaMemcpy failed! (Device to Host)");
-    }
+    // cudaStatus = cudaMemcpy(outputs[HOST_OUTPUT]
+    //                         , buffer1
+    //                         , width * height * (*inputs[IMAGE_STRIDE]) * sizeof(T2)
+    //                         , cudaMemcpyDeviceToHost);
+    // if (cudaStatus != cudaSuccess) {
+    //     throw std::runtime_error("cudaMemcpy failed! (Device to Host)");
+    // }
 }
 
 template void image::blur::run(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);

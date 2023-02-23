@@ -55,7 +55,7 @@ namespace image::blur {
                     *inputs[IMAGE_WIDTH], 
                     *inputs[IMAGE_HEIGHT], 
                     *inputs[IMAGE_STRIDE], 
-                    outputs[HOST_OUTPUT], 100
+                    reinterpret_cast<T2*>(inputs[HOST_INPUT]), 100
                 );
 
         delete inputs[IMAGE_WIDTH];
