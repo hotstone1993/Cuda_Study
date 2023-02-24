@@ -23,11 +23,11 @@ public:
         cudaEventSynchronize(stop);
     }
 
-    void printElapsedTime() {
+    void printElapsedTime(std::string_view device) {
         float milliseconds = 0.0;
         cudaEventElapsedTime(&milliseconds, start, stop);
 
-        std::cerr <<" SAXPY execution time : " << milliseconds << "ms\n";
+        std::cerr << device << " - SAXPY execution time : " << milliseconds << "ms\n";
     }
     
 private:

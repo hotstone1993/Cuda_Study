@@ -11,12 +11,12 @@
     timer.startTimer(); \
     TARGET_NAMESPACE::run_mt(INPUTS, OUTPUTS); \
     timer.stopTimer(); \
-    timer.printElapsedTime(); \
+    timer.printElapsedTime("MT"); \
     \
     timer.startTimer(); \
     TARGET_NAMESPACE::run(INPUTS, OUTPUTS); \
     timer.stopTimer(); \
-    timer.printElapsedTime(); \
+    timer.printElapsedTime("CUDA"); \
     \
     TARGET_NAMESPACE::destroy(INPUTS, OUTPUTS); \
 }
