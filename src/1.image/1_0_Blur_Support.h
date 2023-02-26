@@ -10,6 +10,49 @@
 #include <stb_image_write.h>
 
 namespace image::blur {
+    cudaTextureObject_t rgbaTex;
+    cudaArray_t textureArray = nullptr;
+    
+    void initTexture(int width, int height, void *pImage) {
+        cudaError_t cudaStatus;
+        cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(8, 8, 8, 0, cudaChannelFormatKindUnsigned);
+
+        size_t bytesPerElem = sizeof(uchar3);
+
+        cudaStatus = cudaMallocArray(&textureArray, &channelDesc, width, height);
+        if (cudaStatus != cudaSuccess) {
+            throw std::runtime_error("cudaMallocArray failed!");
+        }
+
+        cudaStatus = cudaMemcpy2DToArray(
+            textureArray, 0, 0, pImage, width * bytesPerElem, width * bytesPerElem, height,
+            cudaMemcpyHostToDevice);
+        if (cudaStatus != cudaSuccess) {
+            throw std::runtime_error("cudaMemcpy2DToArray failed!");
+        }
+
+        // // set texture parameters
+        cudaResourceDesc texRes;
+        memset(&texRes, 0, sizeof(cudaResourceDesc));
+
+        texRes.resType = cudaResourceTypeArray;
+        texRes.res.array.array = textureArray;
+
+        cudaTextureDesc texDescr;
+        memset(&texDescr, 0, sizeof(cudaTextureDesc));
+
+        texDescr.normalizedCoords = false;
+        texDescr.filterMode = cudaFilterModeLinear;
+        texDescr.addressMode[0] = cudaAddressModeWrap;
+        texDescr.addressMode[1] = cudaAddressModeWrap;
+        texDescr.readMode = cudaReadModeElementType;
+
+        cudaStatus = cudaCreateTextureObject(&rgbaTex, &texRes, &texDescr, NULL);
+        if (cudaStatus != cudaSuccess) {
+            throw std::runtime_error("cudaCreateTextureObject failed!");
+        }
+    }
+    
     template <class T1>
     void copyInputs(std::vector<T1*>& inputs) {
         cudaError_t cudaStatus = cudaMemcpy(inputs[DEVICE_INPUT]
@@ -39,6 +82,7 @@ namespace image::blur {
         size_t inputSize = width * height * pixel / (sizeof(T1) / sizeof(T2));
         inputs[HOST_INPUT] = new T1[inputSize];
         memcpy(inputs[HOST_INPUT], data, sizeof(uint8_t) * width * height * pixel);
+        initTexture(width, height, data);
         stbi_image_free(data);
         CUDA_MALLOC(inputs[DEVICE_INPUT], inputSize, T1)
 
@@ -66,6 +110,8 @@ namespace image::blur {
         
         delete[] outputs[HOST_OUTPUT];
         cudaFree(outputs[DEVICE_OUTPUT]);
+        cudaFreeArray(textureArray);
+        cudaDestroyTextureObject(rgbaTex);
     }
 }
 
