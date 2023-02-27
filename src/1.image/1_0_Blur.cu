@@ -4,26 +4,30 @@ struct pixel {
     TARGET_OUTPUT_TYPE r = 0;
     TARGET_OUTPUT_TYPE g = 0;
     TARGET_OUTPUT_TYPE b = 0;
+    TARGET_OUTPUT_TYPE a = 0;
 };
 
 struct pixelStorage {
     uint32_t r = 0;
     uint32_t g = 0;
     uint32_t b = 0;
+    uint32_t a = 0;
 
-    __device__ pixelStorage(const pixel& other): r(other.r), g(other.g), b(other.b) {}
-    __device__ pixelStorage(const pixelStorage& other): r(other.r), g(other.g), b(other.b) {}
+    __device__ pixelStorage(const pixel& other): r(other.r), g(other.g), b(other.b), a(other.a) {}
+    __device__ pixelStorage(const pixelStorage& other): r(other.r), g(other.g), b(other.b), a(other.a) {}
 
     __device__ void operator+=(const pixel& other) {
         r += other.r;
         g += other.g;
         b += other.b;
+        a += other.a;
     }
 
     __device__ void operator-=(const pixel& other) {
         r -= other.r;
         g -= other.g;
         b -= other.b;
+        a -= other.a;
     }
     
     __device__ pixelStorage operator/(int value) {
@@ -37,12 +41,14 @@ struct pixelStorage {
         r /= value;
         g /= value;
         b /= value;
+        a /= value;
     }
     
     __device__ void operator*=(int value) {
         r *= value;
         g *= value;
         b *= value;
+        a *= value;
     }
 };
 
@@ -50,6 +56,7 @@ __device__ inline void setPixel(pixel& target, pixelStorage result) {
     target.r = result.r;
     target.g = result.g;
     target.b = result.b;
+    target.a = result.a;
 }
 
 __global__ void verticalBlurImage(TARGET_OUTPUT_TYPE* result, TARGET_OUTPUT_TYPE* image, int w, int h, int intensity) {
@@ -140,7 +147,9 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
                                 
     cudaError_t cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
-        throw std::runtime_error("MatMul launch failed\n");
+        std::string error = "vertical blur failed - ";
+        error += cudaGetErrorString(cudaStatus);
+        throw std::runtime_error(error);
     }
 
     horizontalBlurImage<<<height / (THREADS - 1), THREADS>>>(buffer1
@@ -151,7 +160,9 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
                                 
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
-        throw std::runtime_error("MatMul launch failed\n");
+        std::string error = "horizontal blur failed - ";
+        error += cudaGetErrorString(cudaStatus);
+        throw std::runtime_error(error);
     }
     
     // cudaStatus = cudaMemcpy(outputs[HOST_OUTPUT]

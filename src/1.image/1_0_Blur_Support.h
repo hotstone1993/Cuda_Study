@@ -11,13 +11,13 @@
 
 namespace image::blur {
     cudaTextureObject_t rgbaTex;
-    cudaArray_t textureArray = nullptr;
+    cudaArray *textureArray;
     
     void initTexture(int width, int height, void *pImage) {
-        cudaError_t cudaStatus;
-        cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(8, 8, 8, 0, cudaChannelFormatKindUnsigned);
+        cudaError cudaStatus;
+        cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(8, 8, 8, 8, cudaChannelFormatKindUnsigned);
 
-        size_t bytesPerElem = sizeof(uchar3);
+        size_t bytesPerElem = sizeof(uchar4);
 
         cudaStatus = cudaMallocArray(&textureArray, &channelDesc, width, height);
         if (cudaStatus != cudaSuccess) {
@@ -31,7 +31,6 @@ namespace image::blur {
             throw std::runtime_error("cudaMemcpy2DToArray failed!");
         }
 
-        // // set texture parameters
         cudaResourceDesc texRes;
         memset(&texRes, 0, sizeof(cudaResourceDesc));
 
@@ -42,14 +41,16 @@ namespace image::blur {
         memset(&texDescr, 0, sizeof(cudaTextureDesc));
 
         texDescr.normalizedCoords = false;
-        texDescr.filterMode = cudaFilterModeLinear;
+        texDescr.filterMode = cudaFilterModePoint;
         texDescr.addressMode[0] = cudaAddressModeWrap;
         texDescr.addressMode[1] = cudaAddressModeWrap;
         texDescr.readMode = cudaReadModeElementType;
 
         cudaStatus = cudaCreateTextureObject(&rgbaTex, &texRes, &texDescr, NULL);
         if (cudaStatus != cudaSuccess) {
-            throw std::runtime_error("cudaCreateTextureObject failed!");
+            std::string error = "cudaCreateTextureObject failed! - ";
+            error += cudaGetErrorString(cudaStatus);
+            throw error;
         }
     }
     
@@ -67,10 +68,10 @@ namespace image::blur {
     template <class T1, class T2>
     requires (std::integral<T1> && sizeof(T1) >= 4)
     void setup(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-        char const* fileName = "../data/1.image/test_image.jpg";
+        char const* fileName = "../data/1.image/Sample-png-image-30mb.png";
         int width, height, pixel;
 
-        uint8_t *data = stbi_load(fileName, &width, &height, &pixel, 0); // red, green, blue
+        uint8_t *data = stbi_load(fileName, &width, &height, &pixel, 0); // red, green, blue, alpha
         if (data == nullptr) {
             throw std::runtime_error("Failed stbi_load\n");
         }
@@ -79,9 +80,9 @@ namespace image::blur {
         inputs[IMAGE_WIDTH] = new T1(width);
         inputs[IMAGE_HEIGHT] = new T1(height);
         inputs[IMAGE_STRIDE] = new T1(pixel);
-        size_t inputSize = width * height * pixel / (sizeof(T1) / sizeof(T2));
+        size_t inputSize = width * height * pixel * sizeof(uint8_t);
         inputs[HOST_INPUT] = new T1[inputSize];
-        memcpy(inputs[HOST_INPUT], data, sizeof(uint8_t) * width * height * pixel);
+        memcpy(inputs[HOST_INPUT], data, inputSize);
         initTexture(width, height, data);
         stbi_image_free(data);
         CUDA_MALLOC(inputs[DEVICE_INPUT], inputSize, T1)

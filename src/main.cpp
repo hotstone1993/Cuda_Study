@@ -8,6 +8,8 @@ int main(int argc, char *argv[]) {
         RUN(inputs, outputs)
     } catch(std::runtime_error& message) {
         DESTROY(inputs, outputs)     
+    } catch(std::string& message) {
+        std::cerr << message << std::endl;
     }
 
     return 0;
