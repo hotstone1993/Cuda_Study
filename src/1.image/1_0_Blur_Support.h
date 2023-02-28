@@ -10,8 +10,6 @@
 #include <stb_image_write.h>
 
 namespace image::blur {
-    cudaTextureObject_t rgbaTex;
-    cudaArray *textureArray;
     
     void initTexture(int width, int height, void *pImage) {
         cudaError cudaStatus;
@@ -100,7 +98,7 @@ namespace image::blur {
                     *inputs[IMAGE_WIDTH], 
                     *inputs[IMAGE_HEIGHT], 
                     *inputs[IMAGE_STRIDE], 
-                    reinterpret_cast<T2*>(inputs[HOST_INPUT]), 100
+                    outputs[HOST_OUTPUT], 100
                 );
 
         delete inputs[IMAGE_WIDTH];

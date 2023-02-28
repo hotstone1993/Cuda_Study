@@ -127,30 +127,30 @@ void horizontalBlur(TARGET_OUTPUT_TYPE* image, TARGET_OUTPUT_TYPE* result, int w
 
 template <class T1, class T2>
 void image::blur::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    std::vector<std::future<void>> futures;
-    ThreadPool tp(THREAD_COUNT);
+    // std::vector<std::future<void>> futures;
+    // ThreadPool tp(THREAD_COUNT);
 
-    int width = *inputs[IMAGE_WIDTH];
-    int height = *inputs[IMAGE_HEIGHT];
-    TARGET_OUTPUT_TYPE* buffer1 = reinterpret_cast<T2*>(inputs[HOST_INPUT]);
-    TARGET_OUTPUT_TYPE* buffer2 = outputs[HOST_OUTPUT];
+    // int width = *inputs[IMAGE_WIDTH];
+    // int height = *inputs[IMAGE_HEIGHT];
+    // TARGET_OUTPUT_TYPE* buffer1 = reinterpret_cast<T2*>(inputs[HOST_INPUT]);
+    // TARGET_OUTPUT_TYPE* buffer2 = outputs[HOST_OUTPUT];
 
-    for (size_t x = 0; x < width; ++x) {
-        futures.emplace_back(tp.addJob(verticalBlur, buffer1, buffer2, width, height, x));
-    }
+    // for (size_t x = 0; x < width; ++x) {
+    //     futures.emplace_back(tp.addJob(verticalBlur, buffer1, buffer2, width, height, x));
+    // }
     
-    for (auto& f : futures) {
-        f.get(); // for exception
-    }
-    futures.clear();
+    // for (auto& f : futures) {
+    //     f.get(); // for exception
+    // }
+    // futures.clear();
     
-    for (size_t y = 0; y < height; ++y) {
-        futures.emplace_back(tp.addJob(horizontalBlur, buffer2, buffer1, width, height, y));
-    }
+    // for (size_t y = 0; y < height; ++y) {
+    //     futures.emplace_back(tp.addJob(horizontalBlur, buffer2, buffer1, width, height, y));
+    // }
     
-    for (auto& f : futures) {
-        f.get(); // for exception
-    }
+    // for (auto& f : futures) {
+    //     f.get(); // for exception
+    // }
 }
 
 template void image::blur::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
