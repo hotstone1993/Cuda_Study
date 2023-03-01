@@ -21,7 +21,7 @@ typedef uint8_t TARGET_OUTPUT_TYPE;
 #ifndef IMAGE_BLUR_CONST
 #define IMAGE_BLUR_CONST
 
-constexpr int intensity = 50;
+constexpr int intensity = 200;
 
 struct pixel {
     TARGET_OUTPUT_TYPE r = 0;

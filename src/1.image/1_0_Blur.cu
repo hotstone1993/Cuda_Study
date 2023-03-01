@@ -43,8 +43,9 @@ __global__ void horizontalBlurImage(TARGET_OUTPUT_TYPE* result, cudaTextureObjec
     int y = blockDim.x * blockIdx.x + threadIdx.x;
     pixel* output = reinterpret_cast<pixel*>(result);
 
-    if (y >= h)
+    if (y >= h) {
         return;
+    }
 
     float scale = (float)((intensity << 1) + 1);
     pixelStorage sum{};
@@ -69,15 +70,16 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     TARGET_OUTPUT_TYPE* buffer1 = reinterpret_cast<T2*>(inputs[DEVICE_INPUT]);
     TARGET_OUTPUT_TYPE* buffer2 = outputs[DEVICE_OUTPUT];
     cudaArray *textureArray;
+    dim3 blockDim(height % THREADS > 0 ? height / THREADS + 1 : height / THREADS);
 
-    horizontalBlurImage<<<height / (THREADS - 1), THREADS>>>(buffer1
+    horizontalBlurImage<<<blockDim, THREADS>>>(buffer1
                                 , rgbaTex
                                 , width
                                 , height
                                 , intensity);
-                                
     checkCudaError(cudaGetLastError(), "vertical blur failed - ");
 
+    blockDim.x = width % THREADS > 0 ? width / THREADS + 1 : width / THREADS;
     verticalBlurImage<<<width / (THREADS - 1), THREADS>>>(buffer2
                                 , buffer1
                                 , width
@@ -87,7 +89,7 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     checkCudaError(cudaGetLastError(), "horizontal blur failed - ");
     
     checkCudaError(cudaMemcpy(outputs[HOST_OUTPUT_CUDA]
-                            , outputs[DEVICE_OUTPUT]
+                            , buffer2
                             , width * height * pixel * sizeof(T2)
                             , cudaMemcpyDeviceToHost),
                             "cudaMemcpy failed! (Device to Host) - ");
