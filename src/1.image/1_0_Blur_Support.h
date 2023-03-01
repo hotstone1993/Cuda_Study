@@ -43,7 +43,7 @@ namespace image::blur {
     template <class T1>
     void copyInputs(std::vector<T1*>& inputs) {
         checkCudaError(cudaMemcpy(inputs[DEVICE_INPUT]
-                                        , inputs[HOST_INPUT]
+                                        , inputs[HOST_INPUT1]
                                         , *inputs[IMAGE_WIDTH] * *inputs[IMAGE_HEIGHT] * *inputs[IMAGE_STRIDE] * sizeof(uint8_t)
                                         , cudaMemcpyHostToDevice),
                                         "cudaMemcpy failed! (Host to Device) - ");
@@ -65,14 +65,16 @@ namespace image::blur {
         inputs[IMAGE_HEIGHT] = new T1(height);
         inputs[IMAGE_STRIDE] = new T1(pixel);
         size_t inputSize = width * height * pixel * sizeof(uint8_t);
-        inputs[HOST_INPUT] = new T1[inputSize];
-        memcpy(inputs[HOST_INPUT], data, inputSize);
+        inputs[HOST_INPUT1] = new T1[inputSize];
+        inputs[HOST_INPUT2] = new T1[inputSize];
+        memcpy(inputs[HOST_INPUT1], data, inputSize);
         initTexture(width, height, data);
         stbi_image_free(data);
         CUDA_MALLOC(inputs[DEVICE_INPUT], inputSize, T1)
 
         outputs.resize(OUTPUT_COUNT);
-        outputs[HOST_OUTPUT] = new T2[width * height * pixel];
+        outputs[HOST_OUTPUT_MT] = new T2[width * height * pixel];
+        outputs[HOST_OUTPUT_CUDA] = new T2[width * height * pixel];
         CUDA_MALLOC(outputs[DEVICE_OUTPUT], width * height * pixel, T2)
 
         copyInputs(inputs);
@@ -80,20 +82,29 @@ namespace image::blur {
         
     template <class T1, class T2>
     void destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-        stbi_write_jpg("blured_result.jpg", 
+        stbi_write_jpg("blured_result_mt.jpg", 
                     *inputs[IMAGE_WIDTH], 
                     *inputs[IMAGE_HEIGHT], 
                     *inputs[IMAGE_STRIDE], 
-                    outputs[HOST_OUTPUT], 100
+                    reinterpret_cast<T2*>(inputs[HOST_INPUT1]), 100
+                );
+
+        stbi_write_jpg("blured_result_cuda.jpg", 
+                    *inputs[IMAGE_WIDTH], 
+                    *inputs[IMAGE_HEIGHT], 
+                    *inputs[IMAGE_STRIDE], 
+                    outputs[HOST_OUTPUT_CUDA], 100
                 );
 
         delete inputs[IMAGE_WIDTH];
         delete inputs[IMAGE_HEIGHT];
         delete inputs[IMAGE_STRIDE];
-        delete[] inputs[HOST_INPUT];
+        delete[] inputs[HOST_INPUT1];
+        delete[] inputs[HOST_INPUT2];
         cudaFree(inputs[DEVICE_INPUT]);
         
-        delete[] outputs[HOST_OUTPUT];
+        delete[] outputs[HOST_OUTPUT_MT];
+        delete[] outputs[HOST_OUTPUT_CUDA];
         cudaFree(outputs[DEVICE_OUTPUT]);
         cudaFreeArray(textureArray);
         cudaDestroyTextureObject(rgbaTex);

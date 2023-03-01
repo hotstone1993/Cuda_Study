@@ -66,7 +66,6 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     int width = *inputs[IMAGE_WIDTH];
     int height = *inputs[IMAGE_HEIGHT];
     int pixel = *inputs[IMAGE_STRIDE];
-    int intensity = 50;
     TARGET_OUTPUT_TYPE* buffer1 = reinterpret_cast<T2*>(inputs[DEVICE_INPUT]);
     TARGET_OUTPUT_TYPE* buffer2 = outputs[DEVICE_OUTPUT];
     cudaArray *textureArray;
@@ -87,7 +86,7 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
                                 
     checkCudaError(cudaGetLastError(), "horizontal blur failed - ");
     
-    checkCudaError(cudaMemcpy(outputs[HOST_OUTPUT]
+    checkCudaError(cudaMemcpy(outputs[HOST_OUTPUT_CUDA]
                             , outputs[DEVICE_OUTPUT]
                             , width * height * pixel * sizeof(T2)
                             , cudaMemcpyDeviceToHost),

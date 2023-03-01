@@ -1,13 +1,15 @@
 #define IMAGE_WIDTH 0
 #define IMAGE_HEIGHT 1
 #define IMAGE_STRIDE 2
-#define HOST_INPUT 3
-#define DEVICE_INPUT 4
-#define INPUT_COUNT 5
+#define HOST_INPUT1 3
+#define HOST_INPUT2 4
+#define DEVICE_INPUT 5
+#define INPUT_COUNT 6
 
-#define HOST_OUTPUT 0
-#define DEVICE_OUTPUT 1
-#define OUTPUT_COUNT 2
+#define HOST_OUTPUT_MT 0
+#define HOST_OUTPUT_CUDA 1
+#define DEVICE_OUTPUT 2
+#define OUTPUT_COUNT 3
 
 #define THREADS 64
 
@@ -18,6 +20,8 @@ typedef uint8_t TARGET_OUTPUT_TYPE;
 
 #ifndef IMAGE_BLUR_CONST
 #define IMAGE_BLUR_CONST
+
+constexpr int intensity = 50;
 
 struct pixel {
     TARGET_OUTPUT_TYPE r = 0;
