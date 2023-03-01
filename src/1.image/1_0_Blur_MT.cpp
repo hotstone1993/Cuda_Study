@@ -3,65 +3,6 @@
 constexpr size_t THREAD_COUNT = 8;
 constexpr int intensity = 500;
 
-struct pixel {
-    TARGET_OUTPUT_TYPE r = 0;
-    TARGET_OUTPUT_TYPE g = 0;
-    TARGET_OUTPUT_TYPE b = 0;
-    TARGET_OUTPUT_TYPE a = 0;
-};
-
-struct pixelStorage {
-    uint32_t r = 0;
-    uint32_t g = 0;
-    uint32_t b = 0;
-    uint32_t a = 0;
-
-    pixelStorage(const pixel& other): r(other.r), g(other.g), b(other.b), a(other.a) {}
-    pixelStorage(const pixelStorage& other): r(other.r), g(other.g), b(other.b), a(other.a) {}
-
-    void operator+=(const pixel& other) {
-        r += other.r;
-        g += other.g;
-        b += other.b;
-        a += other.a;
-    }
-
-    void operator-=(const pixel& other) {
-        r -= other.r;
-        g -= other.g;
-        b -= other.b;
-        a -= other.a;
-    }
-    
-    pixelStorage operator/(int value) {
-        pixelStorage newStorage(*this);
-        newStorage /= value;
-
-        return newStorage;
-    }
-    
-    void operator/=(int value) {
-        r /= value;
-        g /= value;
-        b /= value;
-        a /= value;
-    }
-    
-    void operator*=(int value) {
-        r *= value;
-        g *= value;
-        b *= value;
-        a *= value;
-    }
-};
-
-inline void setPixel(pixel& target, pixelStorage result) {
-    target.r = result.r;
-    target.g = result.g;
-    target.b = result.b;
-    target.a = result.a;
-}
-
 void verticalBlur(TARGET_OUTPUT_TYPE* image, TARGET_OUTPUT_TYPE* result, int w, int h, int x) {
     pixel* input = reinterpret_cast<pixel*>(image);
     pixel* output = reinterpret_cast<pixel*>(result);
