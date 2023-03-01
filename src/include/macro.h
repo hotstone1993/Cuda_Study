@@ -6,17 +6,21 @@
 #define RUN(INPUTS, OUTPUTS) { \
     initCUDA(); \
     EventTimer timer; \
-    TARGET_NAMESPACE::setup(INPUTS, OUTPUTS); \
     \
     timer.startTimer(); \
-    TARGET_NAMESPACE::run_mt(INPUTS, OUTPUTS); \
+    TARGET_NAMESPACE::setup(INPUTS, OUTPUTS); \
     timer.stopTimer(); \
-    timer.printElapsedTime("MT"); \
+    timer.printElapsedTime("Setup"); \
     \
     timer.startTimer(); \
     TARGET_NAMESPACE::run(INPUTS, OUTPUTS); \
     timer.stopTimer(); \
     timer.printElapsedTime("CUDA"); \
+    \
+    timer.startTimer(); \
+    TARGET_NAMESPACE::run_mt(INPUTS, OUTPUTS); \
+    timer.stopTimer(); \
+    timer.printElapsedTime("MT"); \
     \
     TARGET_NAMESPACE::destroy(INPUTS, OUTPUTS); \
 }
