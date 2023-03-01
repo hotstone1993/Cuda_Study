@@ -12,22 +12,15 @@
 namespace image::blur {
     
     void initTexture(int width, int height, void *pImage) {
-        cudaError cudaStatus;
         cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(8, 8, 8, 8, cudaChannelFormatKindUnsigned);
 
         size_t bytesPerElem = sizeof(uchar4);
 
-        cudaStatus = cudaMallocArray(&textureArray, &channelDesc, width, height);
-        if (cudaStatus != cudaSuccess) {
-            throw std::runtime_error("cudaMallocArray failed!");
-        }
+        checkCudaError(cudaMallocArray(&textureArray, &channelDesc, width, height), "cudaMallocArray failed! - ");
 
-        cudaStatus = cudaMemcpy2DToArray(
+        checkCudaError(cudaMemcpy2DToArray(
             textureArray, 0, 0, pImage, width * bytesPerElem, width * bytesPerElem, height,
-            cudaMemcpyHostToDevice);
-        if (cudaStatus != cudaSuccess) {
-            throw std::runtime_error("cudaMemcpy2DToArray failed!");
-        }
+            cudaMemcpyHostToDevice), "cudaMemcpy2DToArray failed! - ");
 
         cudaResourceDesc texRes;
         memset(&texRes, 0, sizeof(cudaResourceDesc));
@@ -44,23 +37,16 @@ namespace image::blur {
         texDescr.addressMode[1] = cudaAddressModeWrap;
         texDescr.readMode = cudaReadModeElementType;
 
-        cudaStatus = cudaCreateTextureObject(&rgbaTex, &texRes, &texDescr, NULL);
-        if (cudaStatus != cudaSuccess) {
-            std::string error = "cudaCreateTextureObject failed! - ";
-            error += cudaGetErrorString(cudaStatus);
-            throw error;
-        }
+        checkCudaError(cudaCreateTextureObject(&rgbaTex, &texRes, &texDescr, NULL), "cudaCreateTextureObject failed! - ");
     }
     
     template <class T1>
     void copyInputs(std::vector<T1*>& inputs) {
-        cudaError_t cudaStatus = cudaMemcpy(inputs[DEVICE_INPUT]
+        checkCudaError(cudaMemcpy(inputs[DEVICE_INPUT]
                                         , inputs[HOST_INPUT]
                                         , *inputs[IMAGE_WIDTH] * *inputs[IMAGE_HEIGHT] * *inputs[IMAGE_STRIDE] * sizeof(uint8_t)
-                                        , cudaMemcpyHostToDevice);
-        if (cudaStatus != cudaSuccess) {
-            throw std::runtime_error("cudaMemcpy failed! (Host to Device)");
-        }
+                                        , cudaMemcpyHostToDevice),
+                                        "cudaMemcpy failed! (Host to Device) - ");
     }
 
     template <class T1, class T2>

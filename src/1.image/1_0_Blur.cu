@@ -149,12 +149,7 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
                                 , height
                                 , intensity);
                                 
-    cudaError_t cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        std::string error = "vertical blur failed - ";
-        error += cudaGetErrorString(cudaStatus);
-        throw std::runtime_error(error);
-    }
+    checkCudaError(cudaGetLastError(), "vertical blur failed - ");
 
     verticalBlurImage<<<width / (THREADS - 1), THREADS>>>(buffer2
                                 , buffer1
@@ -162,22 +157,13 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
                                 , height
                                 , intensity);
                                 
-    cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        std::string error = "horizontal blur failed - ";
-        error += cudaGetErrorString(cudaStatus);
-        throw std::runtime_error(error);
-    }
+    checkCudaError(cudaGetLastError(), "horizontal blur failed - ");
     
-    cudaStatus = cudaMemcpy(outputs[HOST_OUTPUT]
+    checkCudaError(cudaMemcpy(outputs[HOST_OUTPUT]
                             , outputs[DEVICE_OUTPUT]
                             , width * height * pixel * sizeof(T2)
-                            , cudaMemcpyDeviceToHost);
-    if (cudaStatus != cudaSuccess) {
-        std::string error = "cudaMemcpy failed! (Device to Host) - ";
-        error += cudaGetErrorString(cudaStatus);
-        throw error;
-    }
+                            , cudaMemcpyDeviceToHost),
+                            "cudaMemcpy failed! (Device to Host) - ");
 }
 
 template void image::blur::run(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);

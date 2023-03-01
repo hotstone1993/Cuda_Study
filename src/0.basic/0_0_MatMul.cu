@@ -70,15 +70,9 @@ void basic::matmul::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
 
     mulMatrixWithSharedMemory<<<gridDim, blockDim>>>(outputs[DEVICE_OUTPUT1], inputs[DEVICE_INPUT1], inputs[DEVICE_INPUT2], SIZE);
 
-    cudaError_t cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        throw std::runtime_error("MatMul launch failed: %s\n");
-    }
+    checkCudaError(cudaGetLastError(), "MatMul launch failed - ");
     
-    cudaStatus = cudaMemcpy(outputs[HOST_OUTPUT1], outputs[DEVICE_OUTPUT1], SIZE * SIZE * sizeof(T2), cudaMemcpyDeviceToHost);
-    if (cudaStatus != cudaSuccess) {
-        throw std::runtime_error("cudaMemcpy failed! (Device to Host)");
-    }
+    checkCudaError(cudaMemcpy(outputs[HOST_OUTPUT1], outputs[DEVICE_OUTPUT1], SIZE * SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
 }
 
 template void basic::matmul::run(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);

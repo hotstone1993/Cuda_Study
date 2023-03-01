@@ -27,6 +27,14 @@ inline void initCUDA() {
     }
 }
 
+inline void checkCudaError(cudaError_t status, const char* prefix) {
+    if (status != cudaSuccess) {
+        std::string message = prefix;
+        message += cudaGetErrorString(status);
+        throw std::runtime_error(message);
+    }
+}
+
 #define CUDA_MALLOC(ptr, size, TYPE) {\
     cudaError_t cudaStatus = cudaMalloc((void**)&ptr, size * sizeof(TYPE)); \
     if (cudaStatus != cudaSuccess) { \
