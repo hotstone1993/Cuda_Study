@@ -5,6 +5,8 @@ add_executable(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/0_0_MatMul.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/0_0_MatMul_MT.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/0_1_MergeSort.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/0.basic/0_1_MergeSort_MT.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/1.image/1_0_Blur.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/1.image/1_0_Blur_MT.cpp
 )
