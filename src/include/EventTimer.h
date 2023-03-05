@@ -1,37 +1,30 @@
 
 #ifndef EVENT_TIMER
 #define EVENT_TIMER
+#include <chrono>
 
 class EventTimer {
 public:
     EventTimer() {
-        cudaEventCreate(&start);
-        cudaEventCreate(&stop);
     }
 
     ~EventTimer() {
-        cudaEventDestroy(start);
-        cudaEventDestroy(stop);
     }
 
     void startTimer() {
-        cudaEventRecord(start);
+        start = std::chrono::system_clock::now();
     }
 
     void stopTimer() {
-        cudaEventRecord(stop);
-        cudaEventSynchronize(stop);
+        end = std::chrono::system_clock::now();
     }
 
     void printElapsedTime(std::string_view device) {
-        float milliseconds = 0.0;
-        cudaEventElapsedTime(&milliseconds, start, stop);
-
-        std::cerr << device << " - SAXPY execution time : " << milliseconds << "ms\n";
+        std::cerr << device << " - SAXPY execution time : " << std::chrono::duration<float, std::milli>(end - start).count() << "ms\n";
     }
     
 private:
-    cudaEvent_t start, stop;
+    std::chrono::time_point<std::chrono::system_clock> start, end;
 };
 
 #endif // EVENT_TIMER
