@@ -1,9 +1,13 @@
 #include "0_0_MatMul.cuh"
 
+namespace cg = cooperative_groups;
+
 __global__ void mulMatrix(TARGET_OUTPUT_TYPE* c, const TARGET_INPUT_TYPE* a, const TARGET_INPUT_TYPE* b, const unsigned int N)
 {
-    int col = blockDim.x * blockIdx.x + threadIdx.x;
-    int row = blockDim.y * blockIdx.y + threadIdx.y;
+    cg::thread_block block = cg::this_thread_block();
+    
+    int col = block.dim_threads().x * block.group_index().x + block.thread_index().x;
+    int row = block.dim_threads().y * block.group_index().y + block.thread_index().y;
     
     if (row >= N || col >= N)
         return;
@@ -19,14 +23,16 @@ __global__ void mulMatrix(TARGET_OUTPUT_TYPE* c, const TARGET_INPUT_TYPE* a, con
 
 __global__ void mulMatrixWithSharedMemory(TARGET_OUTPUT_TYPE* c, const TARGET_INPUT_TYPE* a, const TARGET_INPUT_TYPE* b, const unsigned int N)
 {
+    cg::thread_block block = cg::this_thread_block();
+
     __shared__ TARGET_INPUT_TYPE tempA[THREADS][THREADS];
     __shared__ TARGET_INPUT_TYPE tempB[THREADS][THREADS];
 
-    int col = blockDim.x * blockIdx.x + threadIdx.x;
-    int row = blockDim.y * blockIdx.y + threadIdx.y;
+    int col = block.dim_threads().x * block.group_index().x + block.thread_index().x;
+    int row = block.dim_threads().y * block.group_index().y + block.thread_index().y;
 
-    int localCol = threadIdx.x;
-    int localRow = threadIdx.y;
+    int localCol = block.thread_index().x;
+    int localRow = block.thread_index().y;
 
     TARGET_OUTPUT_TYPE sum = 0;
 
@@ -45,13 +51,13 @@ __global__ void mulMatrixWithSharedMemory(TARGET_OUTPUT_TYPE* c, const TARGET_IN
             tempB[localRow][localCol] = 0;
         }
 
-        __syncthreads();
+        block.sync();
 
         for (unsigned int idx = 0; idx < blockDim.x; ++idx) {
             sum += (tempA[localRow][idx] * tempB[idx][localCol]);
         }
 
-        __syncthreads();
+        block.sync();
     }
 
     if (row >= N || col >= N)
