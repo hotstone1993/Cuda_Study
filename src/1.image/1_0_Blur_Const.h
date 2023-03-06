@@ -13,7 +13,7 @@
 
 #define THREADS 64
 
-#include "utils.h"
+#include "utils.cuh"
 
 typedef int TARGET_INPUT_TYPE;
 typedef uint8_t TARGET_OUTPUT_TYPE;

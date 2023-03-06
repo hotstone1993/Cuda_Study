@@ -1,7 +1,8 @@
 // #include "0.basic/0_0_MatMul_Support.h"
-#include "1.image/1_0_Blur_Support.h"
+#include "0.basic/0_1_MergeSort_Support.h"
+// #include "1.image/1_0_Blur_Support.h"
 
-#define TARGET_NAMESPACE image::blur
+#define TARGET_NAMESPACE basic::merge
 
 #define RUN(INPUTS, OUTPUTS) { \
     initCUDA(); \

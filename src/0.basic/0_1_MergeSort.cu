@@ -2,6 +2,10 @@
 
 __global__ void mergeSort(TARGET_INPUT_TYPE* input)
 {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+
+    printf("I am thread %d, my SM ID is %d, my warp ID is %d, and my warp lane is %d\n",
+          idx, __mysmid(), __mywarpid(), __mylaneid());
 }
 
 template <class T1, class T2>

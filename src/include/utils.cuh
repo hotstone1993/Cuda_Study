@@ -53,4 +53,8 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_
         || std::fabs(x-y) < std::numeric_limits<T>::min();
 }
 
+__device__ uint32_t __mysmid();
+__device__ uint32_t __mywarpid();
+__device__ uint32_t __mylaneid();
+
 #endif // UTILS

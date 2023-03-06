@@ -8,4 +8,4 @@
 typedef int TARGET_INPUT_TYPE;
 typedef int TARGET_OUTPUT_TYPE;
 
-#include "utils.h"
+#include "utils.cuh"
