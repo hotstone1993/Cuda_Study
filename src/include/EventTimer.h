@@ -20,7 +20,7 @@ public:
     }
 
     void printElapsedTime(std::string_view device) {
-        std::cerr << device << " - SAXPY execution time : " << std::chrono::duration<float, std::milli>(end - start).count() << "ms\n";
+        std::cerr << device << " - execution time : " << std::chrono::duration<float, std::milli>(end - start).count() << "ms\n";
     }
     
 private:

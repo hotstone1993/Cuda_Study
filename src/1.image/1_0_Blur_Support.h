@@ -10,6 +10,10 @@
 #include <stb_image_write.h>
 
 namespace image::blur {
+
+    void printInfo() {
+        std::cerr << "Blur Image" << std::endl;
+    }
     
     void initTexture(int width, int height, void *pImage) {
         cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(8, 8, 8, 8, cudaChannelFormatKindUnsigned);

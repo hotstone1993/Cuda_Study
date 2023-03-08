@@ -6,6 +6,10 @@
 #include "0_0_MatMul.cuh"
 
 namespace basic::matmul {
+    void printInfo() {
+        std::cerr << "Matrix Multiplication" << std::endl;
+    }
+
     template <class T1>
     void initRandom(std::vector<T1*>& inputs) {
         srand(static_cast<unsigned int>(time(nullptr)));

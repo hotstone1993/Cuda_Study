@@ -6,6 +6,10 @@
 #include "0_1_MergeSort.cuh"
 
 namespace basic::merge {
+    void printInfo() {
+        std::cerr << "Merge Sort" << std::endl;
+    }
+
     template <class T1>
     void initRandom(std::vector<T1*>& inputs) {
         srand(static_cast<unsigned int>(time(nullptr)));
