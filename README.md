@@ -9,5 +9,7 @@ How to build?
     
 The result is output like this:
 
-    SAXPY execution time : 4.12131ms  # This is CUDA Result
-    SAXPY execution time : 0.002048ms # This is Muti Threading Result
+    Blur Image
+    Setup - SAXPY execution time : 1434.12ms
+    CUDA - SAXPY execution time : 40.9828ms
+    MT - SAXPY execution time : 1465.55ms
