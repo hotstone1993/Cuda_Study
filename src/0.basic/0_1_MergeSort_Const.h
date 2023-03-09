@@ -2,7 +2,10 @@
 #define DEVICE_INPUT 1
 #define INPUT_COUNT 2
 
-#define SIZE 100000
+#define DEVICE_OUTPUT 0
+#define OUTPUT_COUNT 1
+
+#define SIZE 1000
 #define THREADS 64
 
 typedef int TARGET_INPUT_TYPE;
