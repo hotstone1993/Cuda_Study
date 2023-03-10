@@ -15,7 +15,7 @@ namespace basic::merge {
         srand(static_cast<unsigned int>(time(nullptr)));
 
         for (size_t idx = 0; idx < SIZE; ++idx) {
-            inputs[HOST_INPUT][idx] = std::abs(rand()) % 1000000;
+            inputs[HOST_INPUT][idx] = std::abs(rand()) % SIZE;
         }
     }
 
