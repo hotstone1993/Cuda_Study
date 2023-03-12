@@ -7,7 +7,7 @@
 
 namespace basic::merge {
     void printInfo() {
-        std::cerr << "Merge Sort" << std::endl;
+        std::cerr << "Merge Sort " << SIZE << " random value [0, " << SIZE << ")" << std::endl;
     }
 
     template <class T1>
