@@ -2,6 +2,10 @@
 
 namespace cg = cooperative_groups;
 
+__global__ void binarySearch() {
+    
+}
+
 template <class T1, class T2>
 void basic::binary_search::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     dim3 gridDim(SIZE - (THREADS - 1) / THREADS);

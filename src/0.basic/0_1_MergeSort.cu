@@ -74,6 +74,9 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
 
     mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
     mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
+    cudaDeviceSynchronize();
+
+    checkCudaError(cudaGetLastError(), "Merge Sort launch failed - ");
 
     checkCudaError(cudaMemcpy(inputs[HOST_INPUT], outputs[DEVICE_OUTPUT], SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
 }
