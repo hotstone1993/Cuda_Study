@@ -1,13 +1,13 @@
 
-#ifndef BINARY_SEARCH_SETUP
-#define BINARY_SEARCH_SETUP
+#ifndef LINEAR_SEARCH_SETUP
+#define LINEAR_SEARCH_SETUP
 
-#include "0_2_BinarySearch_MT.h"
-#include "0_2_BinarySearch.cuh"
+#include "0_2_LinearSearch_MT.h"
+#include "0_2_LinearSearch.cuh"
 
-namespace basic::binary_search {
+namespace basic::linear_search {
     void printInfo() {
-        std::cerr << "Binary Search" << std::endl;
+        std::cerr << "Linear Search" << std::endl;
     }
 
     template <class T1>
@@ -46,4 +46,4 @@ namespace basic::binary_search {
     }
 }
 
-#endif // BINARY_SEARCH_SETUP
+#endif // LINEAR_SEARCH_SETUP

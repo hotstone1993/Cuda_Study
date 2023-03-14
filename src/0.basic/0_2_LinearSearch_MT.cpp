@@ -1,4 +1,4 @@
-#include "0_2_BinarySearch_MT.h"
+#include "0_2_LinearSearch_MT.h"
 
 constexpr size_t THREAD_COUNT = 8;
 
@@ -7,7 +7,7 @@ void checkSearchResult(TARGET_INPUT_TYPE* input, size_t start, size_t end) {
 }
 
 template <class T1, class T2>
-void basic::binary_search::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+void basic::linear_search::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     std::vector<std::future<void>> futures;
     
     ThreadPool tp(THREAD_COUNT); 
@@ -24,4 +24,4 @@ void basic::binary_search::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& ou
     }
 }
 
-template void basic::binary_search::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
+template void basic::linear_search::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
