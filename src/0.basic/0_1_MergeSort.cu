@@ -67,13 +67,53 @@ __global__ void mergeSortStep2(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* out
     }
 }
 
+__device__ inline bool compare(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
+    return a < b;
+}
+
+__device__ inline void swap(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
+    int temp = a;
+    a = b;
+    b = temp;
+}
+
+__global__ void evenSort(TARGET_INPUT_TYPE* input) {
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+
+    if (2 * idx + 1 >= SIZE)
+        return;
+
+    if (compare(input[2 * idx], input[2 * idx + 1])) {
+        swap(input[2 * idx], input[2 * idx + 1]);
+    }
+}
+
+__global__ void oddSort(TARGET_INPUT_TYPE* input) {
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+
+    if (idx == 0 || 2 * idx >= SIZE)
+        return;
+
+    if (compare(input[2 * idx - 1], input[2 * idx])) {
+        swap(input[2 * idx - 1], input[2 * idx]);
+    }
+}
+
+
 template <class T1, class T2>
 void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    dim3 gridDim(SIZE - (THREADS - 1) / THREADS);
-    dim3 blockDim(THREADS);
+    // dim3 gridDim(SIZE - (THREADS - 1) / THREADS);
+    // dim3 blockDim(THREADS);
 
-    mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
-    mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
+    // mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+    // mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
+
+    dim3 gridDim(SIZE - (THREADS - 1) / (2 *THREADS));
+    dim3 blockDim(THREADS);
+    for (unsigned int idx = 0; idx < SIZE / 2; ++idx) {
+        evenSort<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+        oddSort<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+    }
     cudaDeviceSynchronize();
 
     checkCudaError(cudaGetLastError(), "Merge Sort launch failed - ");
