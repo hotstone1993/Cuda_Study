@@ -43,6 +43,11 @@ inline void checkCudaError(cudaError_t status, const char* prefix) {
     }\
 }
 
+template<class T>
+inline T divideUp(T totalSize, T threadCount) {
+    return totalSize % threadCount != 0 ? totalSize / threadCount + 1 : totalSize / threadCount;
+}
+
 // https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 template<class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_equal(T x, T y, int ulp) {
