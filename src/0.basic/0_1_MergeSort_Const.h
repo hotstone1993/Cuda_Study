@@ -5,8 +5,9 @@
 #define DEVICE_OUTPUT 0
 #define OUTPUT_COUNT 1
 
-#define SIZE 100000
+#define SIZE 1000000
 #define THREADS 1024
+#define DIRECTION true
 
 typedef int TARGET_INPUT_TYPE;
 typedef int TARGET_OUTPUT_TYPE;

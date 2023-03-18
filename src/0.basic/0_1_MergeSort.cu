@@ -67,58 +67,83 @@ __global__ void mergeSortStep2(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* out
     }
 }
 
+template <bool dir>
 __device__ inline bool compare(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
-    return a < b;
+    if (dir) {
+        return a > b;
+    } else {
+        return a <= b;
+    }
 }
 
 __device__ inline void swap(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
-    int temp = a;
+    TARGET_INPUT_TYPE temp = a;
     a = b;
     b = temp;
 }
 
-__global__ void evenSort(TARGET_INPUT_TYPE* input) {
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+template <bool dir>
+__device__ void evenSort(TARGET_INPUT_TYPE* input) {
+    unsigned int idx = threadIdx.x;
 
-    if (2 * idx + 1 >= SIZE)
-        return;
-
-    if (compare(input[2 * idx], input[2 * idx + 1])) {
+    if (compare<dir>(input[2 * idx], input[2 * idx + 1])) {
         swap(input[2 * idx], input[2 * idx + 1]);
     }
 }
 
-__global__ void oddSort(TARGET_INPUT_TYPE* input) {
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+template <bool dir>
+__device__ void oddSort(TARGET_INPUT_TYPE* input) {
+    unsigned int idx = threadIdx.x;
 
-    if (idx == 0 || 2 * idx >= SIZE)
+    if (idx == 0)
         return;
 
-    if (compare(input[2 * idx - 1], input[2 * idx])) {
+    if (compare<dir>(input[2 * idx - 1], input[2 * idx])) {
         swap(input[2 * idx - 1], input[2 * idx]);
     }
+}
+
+template <bool dir>
+__global__ void blockLevelEvenOddSort(TARGET_INPUT_TYPE* input) {
+    __shared__ TARGET_INPUT_TYPE sInput[2 * THREADS];
+
+    sInput[threadIdx.x] = input[2 * blockDim.x * blockIdx.x + threadIdx.x];
+    sInput[threadIdx.x + THREADS] = input[2 * blockDim.x * blockIdx.x + threadIdx.x + THREADS];
+    __syncthreads();
+
+    for (register unsigned i = 0; i < THREADS; ++i) {
+        evenSort<dir>(sInput);
+        __syncthreads();
+        oddSort<dir>(sInput);
+        __syncthreads();
+    }
+
+    input[2 * blockDim.x * blockIdx.x + threadIdx.x] = sInput[threadIdx.x];
+    input[2 * blockDim.x * blockIdx.x + threadIdx.x + THREADS] = sInput[threadIdx.x + THREADS];
 }
 
 
 template <class T1, class T2>
 void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    // dim3 gridDim(SIZE - (THREADS - 1) / THREADS);
+    // dim3 gridDim(divideUp(SIZE, THREADS));
     // dim3 blockDim(THREADS);
 
     // mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
     // mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
 
-    dim3 gridDim(SIZE - (THREADS - 1) / (2 *THREADS));
+    dim3 gridDim(divideUp(SIZE, 2 * THREADS));
+    dim3 gridDim2(divideUp(SIZE, 2 * THREADS) - 1);
     dim3 blockDim(THREADS);
-    for (unsigned int idx = 0; idx < SIZE / 2; ++idx) {
-        evenSort<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
-        oddSort<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+
+    for (unsigned int idx = 0; idx < gridDim.x; ++idx) {
+        blockLevelEvenOddSort<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+        blockLevelEvenOddSort<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
     }
     cudaDeviceSynchronize();
 
     checkCudaError(cudaGetLastError(), "Merge Sort launch failed - ");
-
-    checkCudaError(cudaMemcpy(inputs[HOST_INPUT], outputs[DEVICE_OUTPUT], SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
+    
+    checkCudaError(cudaMemcpy(inputs[HOST_INPUT], inputs[DEVICE_INPUT], SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
 }
 
 template void basic::merge::run(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
