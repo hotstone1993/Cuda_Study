@@ -76,6 +76,14 @@ __device__ inline bool compare(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
     }
 }
 
+__device__ inline bool compare(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b, bool dir) {
+    if (dir) {
+        return a > b;
+    } else {
+        return a <= b;
+    }
+}
+
 __device__ inline void swap(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
     TARGET_INPUT_TYPE temp = a;
     a = b;
@@ -122,6 +130,37 @@ __global__ void blockLevelEvenOddSort(TARGET_INPUT_TYPE* input) {
     input[2 * blockDim.x * blockIdx.x + threadIdx.x + THREADS] = sInput[threadIdx.x + THREADS];
 }
 
+template <bool dir>
+__global__ void bitonicSort(TARGET_INPUT_TYPE* input) {
+    __shared__ TARGET_INPUT_TYPE sInput[2 * THREADS];
+
+    sInput[threadIdx.x] = input[2 * blockDim.x * blockIdx.x + threadIdx.x];
+    sInput[threadIdx.x + THREADS] = input[2 * blockDim.x * blockIdx.x + threadIdx.x + THREADS];
+
+    for (size_t halfSize = 1; halfSize < blockDim.x; halfSize <<= 1) {
+        bool curr = dir ^ ((threadIdx.x & halfSize) != 0);
+        for (size_t stride = halfSize; stride > 0; stride >>= 1) {
+            __syncthreads();
+            size_t pos = 2 * threadIdx.x - (threadIdx.x & (stride - 1));
+            if (compare(sInput[pos], sInput[pos + stride], dir)) {
+                swap(sInput[pos], sInput[pos + stride]);
+            }
+        }
+    }
+	// bitonic merge step
+	for (unsigned stride = blockDim.x; stride > 0; stride >>= 1) {
+		__syncthreads();
+		unsigned pos = 2 * threadIdx.x - (threadIdx.x & (stride - 1));
+        if (compare<dir>(sInput[pos], sInput[pos + stride])) {
+            swap(sInput[pos], sInput[pos + stride]);
+        }
+	}
+
+    __syncthreads();
+    input[2 * blockDim.x * blockIdx.x + threadIdx.x] = sInput[threadIdx.x];
+    input[2 * blockDim.x * blockIdx.x + threadIdx.x + THREADS] = sInput[threadIdx.x + THREADS];
+}
+
 
 template <class T1, class T2>
 void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
@@ -136,8 +175,8 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     dim3 blockDim(THREADS);
 
     for (unsigned int idx = 0; idx < gridDim.x; ++idx) {
-        blockLevelEvenOddSort<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
-        blockLevelEvenOddSort<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
+        bitonicSort<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+        bitonicSort<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
     }
     cudaDeviceSynchronize();
 
