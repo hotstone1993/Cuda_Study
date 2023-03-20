@@ -2,7 +2,7 @@
 
 namespace cg = cooperative_groups;
 
-__device__ void sort(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* temp, unsigned int start, unsigned int idx, unsigned int stride, unsigned int size) {
+__device__ void merge(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* temp, unsigned int start, unsigned int idx, unsigned int stride, unsigned int size) {
     unsigned int left = start;
     unsigned int right = start + (stride / 2);
     const unsigned int mid = right < SIZE ? right : SIZE;
@@ -31,14 +31,14 @@ __global__ void mergeSortStep1(TARGET_INPUT_TYPE* input)
 
     while (stride < THREADS) {
         if (idx % stride == 0) {
-            sort(input, temp, idx, threadIdx.x, stride, THREADS);
+            merge(input, temp, idx, threadIdx.x, stride, THREADS);
         }
         __syncthreads();
         if (idx < SIZE) {
             input[idx] = temp[threadIdx.x];
         }
         __syncthreads();
-        stride *= 2;
+        stride <<= 1;
     }
 }
 
@@ -52,14 +52,14 @@ __global__ void mergeSortStep2(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* out
     while (stride / 2 < SIZE) {
         if (idx % stride == 0) {
             if (flag) {
-                sort(buffer1, buffer2, idx, idx, stride, SIZE);
+                merge(buffer1, buffer2, idx, idx, stride, SIZE);
             } else {
-                sort(buffer2, buffer1, idx, idx, stride, SIZE);
+                merge(buffer2, buffer1, idx, idx, stride, SIZE);
             }
         }
         __syncthreads();
         flag = !flag;
-        stride *= 2;
+        stride <<= 1;
     }
     
     if (flag && idx < SIZE) {
@@ -164,25 +164,25 @@ __global__ void bitonicSort(TARGET_INPUT_TYPE* input) {
 
 template <class T1, class T2>
 void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    // dim3 gridDim(divideUp(SIZE, THREADS));
-    // dim3 blockDim(THREADS);
-
-    // mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
-    // mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
-
-    dim3 gridDim(divideUp(SIZE, 2 * THREADS));
-    dim3 gridDim2(divideUp(SIZE, 2 * THREADS) - 1);
+    dim3 gridDim(divideUp(SIZE, THREADS));
     dim3 blockDim(THREADS);
 
-    for (unsigned int idx = 0; idx < gridDim.x; ++idx) {
-        bitonicSort<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
-        bitonicSort<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
-    }
+    mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+    mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
+
+    // dim3 gridDim(divideUp(SIZE, 2 * THREADS));
+    // dim3 gridDim2(divideUp(SIZE, 2 * THREADS) - 1);
+    // dim3 blockDim(THREADS);
+
+    // for (unsigned int idx = 0; idx < gridDim.x; ++idx) {
+    //     bitonicSort<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+    //     bitonicSort<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
+    // }
     cudaDeviceSynchronize();
 
     checkCudaError(cudaGetLastError(), "Merge Sort launch failed - ");
     
-    checkCudaError(cudaMemcpy(inputs[HOST_INPUT], inputs[DEVICE_INPUT], SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
+    checkCudaError(cudaMemcpy(inputs[HOST_INPUT], outputs[DEVICE_OUTPUT], SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
 }
 
 template void basic::merge::run(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
