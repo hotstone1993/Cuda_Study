@@ -16,6 +16,7 @@ namespace basic::merge {
 
         for (size_t idx = 0; idx < SIZE; ++idx) {
             inputs[HOST_INPUT][idx] = std::abs(rand()) % SIZE;
+            inputs[CPU_INPUT][idx] = inputs[HOST_INPUT][idx];
         }
     }
 
@@ -31,6 +32,7 @@ namespace basic::merge {
         outputs.resize(OUTPUT_COUNT);
 
         inputs[HOST_INPUT] = new T1[SIZE];
+        inputs[CPU_INPUT] = new T1[SIZE];
         CUDA_MALLOC(inputs[DEVICE_INPUT], SIZE, T1)
         CUDA_MALLOC(outputs[DEVICE_OUTPUT], SIZE, T2)
 
@@ -41,6 +43,7 @@ namespace basic::merge {
     template <class T1, class T2>
     void destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         delete[] inputs[HOST_INPUT];
+        delete[] inputs[CPU_INPUT];
         cudaFree(inputs[DEVICE_INPUT]);
         cudaFree(outputs[DEVICE_OUTPUT]);
     }

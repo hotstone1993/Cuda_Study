@@ -1,5 +1,4 @@
 #include "0_1_MergeSort_MT.h"
-
 constexpr size_t THREAD_COUNT = 8;
 
 void checkResult(TARGET_INPUT_TYPE* input, size_t start, size_t end) {
@@ -13,22 +12,29 @@ void checkResult(TARGET_INPUT_TYPE* input, size_t start, size_t end) {
     }
 }
 
+int compLess( const void* lhs, const void* rhs ) {
+	uint32_t lval = *(static_cast<const uint32_t*>(lhs));
+	uint32_t rval = *(static_cast<const uint32_t*>(rhs));
+	return (lval - rval);
+}
+
 template <class T1, class T2>
 void basic::merge::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    std::vector<std::future<void>> futures;
+    // std::vector<std::future<void>> futures;
     
-    ThreadPool tp(THREAD_COUNT); 
+    // ThreadPool tp(THREAD_COUNT); 
 
-    for (size_t t = 0; t < THREAD_COUNT; ++t) {
-        size_t start = (SIZE / THREAD_COUNT) * t;
-        size_t end = (t < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (t + 1) : SIZE;
+    // for (size_t t = 0; t < THREAD_COUNT; ++t) {
+    //     size_t start = (SIZE / THREAD_COUNT) * t;
+    //     size_t end = (t < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (t + 1) : SIZE;
 
-        futures.emplace_back(tp.addJob(checkResult, inputs[HOST_INPUT], start, end));
-    }
+    //     futures.emplace_back(tp.addJob(checkResult, inputs[HOST_INPUT], start, end));
+    // }
 
-    for (auto& f : futures) {
-        f.get(); // for exception
-    }
+    // for (auto& f : futures) {
+    //     f.get(); // for exception
+    // }
+    std::qsort(inputs[CPU_INPUT], SIZE, sizeof(T1), compLess);
 }
 
 template void basic::merge::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);

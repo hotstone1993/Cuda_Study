@@ -1,6 +1,7 @@
 #define HOST_INPUT 0
 #define DEVICE_INPUT 1
-#define INPUT_COUNT 2
+#define CPU_INPUT 2
+#define INPUT_COUNT 3
 
 #define DEVICE_OUTPUT 0
 #define OUTPUT_COUNT 1

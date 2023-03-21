@@ -1,9 +1,9 @@
 // #include "0.basic/0_0_MatMul_Support.h"
-// #include "0.basic/0_1_MergeSort_Support.h"
-#include "0.basic/0_2_LinearSearch_Support.h"
+#include "0.basic/0_1_MergeSort_Support.h"
+// #include "0.basic/0_2_LinearSearch_Support.h"
 // #include "1.image/1_0_Blur_Support.h"
 
-#define TARGET_NAMESPACE basic::linear_search
+#define TARGET_NAMESPACE basic::merge
 
 #define RUN(INPUTS, OUTPUTS) { \
     initCUDA(); \
@@ -23,7 +23,7 @@
     timer.startTimer(); \
     TARGET_NAMESPACE::run_mt(INPUTS, OUTPUTS); \
     timer.stopTimer(); \
-    timer.printElapsedTime("MT"); \
+    timer.printElapsedTime("CPU"); \
     \
     TARGET_NAMESPACE::destroy(INPUTS, OUTPUTS); \
 }
