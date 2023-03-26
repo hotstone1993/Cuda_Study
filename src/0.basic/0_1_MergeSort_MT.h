@@ -4,6 +4,9 @@
 #include "0_1_MergeSort_Const.h"
 
 namespace basic::merge {
+    inline const char* getComparisonTarget() {
+        return "std::qsort";
+    }
     template <class T1, class T2>
     void run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs);
 }

@@ -4,6 +4,9 @@
 #include "1_0_Blur_Const.h"
 
 namespace image::blur {
+    inline const char* getComparisonTarget() {
+        return "Multi Thread";
+    }
     template <class T1, class T2>
     void run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs);
 }

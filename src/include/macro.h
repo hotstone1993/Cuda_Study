@@ -23,7 +23,7 @@
     timer.startTimer(); \
     TARGET_NAMESPACE::run_mt(INPUTS, OUTPUTS); \
     timer.stopTimer(); \
-    timer.printElapsedTime("CPU"); \
+    timer.printElapsedTime(TARGET_NAMESPACE::getComparisonTarget()); \
     \
     TARGET_NAMESPACE::destroy(INPUTS, OUTPUTS); \
 }
