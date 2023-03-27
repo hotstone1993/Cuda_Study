@@ -23,6 +23,57 @@ __device__ void merge(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* temp, unsigne
     }
 }
 
+template <bool dir>
+__device__ unsigned int getInclusivePositionByBinarySearch(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE target, unsigned int bound, unsigned int stride) {
+	unsigned int pos = 0;
+	for (; stride > 0; stride >>= 1) {
+		int newPos = umin(pos + stride, bound);
+		if ((dir && (input[newPos - 1] <= target)) || (!dir && (input[newPos - 1] > target))) {
+			pos = newPos;
+		}
+	}
+    return pos;
+}
+
+template <bool dir>
+__device__ unsigned int getExclusivePositionByBinarySearch(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE target, unsigned int bound, unsigned int stride) {
+	unsigned int pos = 0;
+	for (; stride > 0; stride >>= 1) {
+		int newPos = umin(pos + stride, bound);
+		if ((dir && (input[newPos - 1] < target)) || (!dir && (input[newPos - 1] > target))) {
+			pos = newPos;
+		}
+	}
+	return pos;
+}
+
+template <bool dir>
+__global__ void mergeSortWithBinarySearch(TARGET_INPUT_TYPE* input) {
+    __shared__ TARGET_INPUT_TYPE temp[2 * THREADS];
+    unsigned int idx = 2 * blockDim.x * blockIdx.x + threadIdx.x;
+    temp[threadIdx.x] = input[idx];
+    temp[blockDim.x + threadIdx.x] = input[blockDim.x + idx];
+
+    for (unsigned int stride = 1; stride < 2 * blockDim.x; stride <<= 1) {
+        unsigned int basePos = (threadIdx.x & (stride - 1));
+        TARGET_INPUT_TYPE* base = temp + 2 * (threadIdx.x - basePos);
+        __syncthreads();
+
+        TARGET_INPUT_TYPE valueA = base[basePos];
+        TARGET_INPUT_TYPE valueB = base[basePos + stride];
+        unsigned int posA = getInclusivePositionByBinarySearch<dir>(base + stride, valueA, stride, stride);
+        unsigned int posB = getExclusivePositionByBinarySearch<dir>(base, valueB, stride, stride);
+        
+        __syncthreads();
+        base[posA] = valueA;
+        base[posB] = valueB;
+    }
+
+    __syncthreads();
+    input[idx] = temp[threadIdx.x];
+    input[blockDim.x + idx] = temp[blockDim.x + threadIdx.x];
+}
+
 __global__ void mergeSortStep1(TARGET_INPUT_TYPE* input)
 {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -164,20 +215,20 @@ __global__ void bitonicSort(TARGET_INPUT_TYPE* input) {
 
 template <class T1, class T2>
 void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    dim3 gridDim(divideUp(SIZE, THREADS));
-    dim3 blockDim(THREADS);
-
-    mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
-    mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
-
-    // dim3 gridDim(divideUp(SIZE, 2 * THREADS));
-    // dim3 gridDim2(divideUp(SIZE, 2 * THREADS) - 1);
+    // dim3 gridDim(divideUp(SIZE, THREADS));
     // dim3 blockDim(THREADS);
 
-    // for (unsigned int idx = 0; idx < gridDim.x; ++idx) {
-    //     bitonicSort<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
-    //     bitonicSort<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
-    // }
+    // mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+    // mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
+
+    dim3 gridDim(divideUp(SIZE, 2 * THREADS));
+    dim3 gridDim2(divideUp(SIZE, 2 * THREADS) - 1);
+    dim3 blockDim(THREADS);
+
+    for (unsigned int idx = 0; idx < gridDim.x; ++idx) {
+        mergeSortWithBinarySearch<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+        mergeSortWithBinarySearch<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
+    }
     cudaDeviceSynchronize();
 
     checkCudaError(cudaGetLastError(), "Merge Sort launch failed - ");
