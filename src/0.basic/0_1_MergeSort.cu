@@ -61,8 +61,8 @@ __global__ void mergeSortWithBinarySearch(TARGET_INPUT_TYPE* input) {
 
         TARGET_INPUT_TYPE valueA = base[basePos];
         TARGET_INPUT_TYPE valueB = base[basePos + stride];
-        unsigned int posA = getInclusivePositionByBinarySearch<dir>(base + stride, valueA, stride, stride);
-        unsigned int posB = getExclusivePositionByBinarySearch<dir>(base, valueB, stride, stride);
+        unsigned int posA = getInclusivePositionByBinarySearch<dir>(base + stride, valueA, stride, stride) + basePos;
+        unsigned int posB = getExclusivePositionByBinarySearch<dir>(base, valueB, stride, stride) + basePos;
         
         __syncthreads();
         base[posA] = valueA;
@@ -233,7 +233,7 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
 
     checkCudaError(cudaGetLastError(), "Merge Sort launch failed - ");
     
-    checkCudaError(cudaMemcpy(inputs[HOST_INPUT], outputs[DEVICE_OUTPUT], SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
+    checkCudaError(cudaMemcpy(inputs[HOST_INPUT], inputs[DEVICE_INPUT], SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
 }
 
 template void basic::merge::run(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
