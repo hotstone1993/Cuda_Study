@@ -35,6 +35,10 @@ namespace basic::merge {
         inputs[CPU_INPUT] = new T1[SIZE];
         CUDA_MALLOC(inputs[DEVICE_INPUT], SIZE, T1)
         CUDA_MALLOC(outputs[DEVICE_OUTPUT], SIZE, T2)
+        CUDA_MALLOC(inputs[DEVICE_RANK_A], SIZE / SAMPLE_STRIDE, T1)
+        CUDA_MALLOC(inputs[DEVICE_RANK_B], SIZE / SAMPLE_STRIDE, T1)
+        CUDA_MALLOC(inputs[DEVICE_LIMITS_A], SIZE / SAMPLE_STRIDE, T1)
+        CUDA_MALLOC(inputs[DEVICE_LIMITS_B], SIZE / SAMPLE_STRIDE, T1)
 
         initRandom(inputs);
         copyInputs(inputs);
@@ -45,6 +49,10 @@ namespace basic::merge {
         delete[] inputs[HOST_INPUT];
         delete[] inputs[CPU_INPUT];
         cudaFree(inputs[DEVICE_INPUT]);
+        cudaFree(inputs[DEVICE_RANK_A]);
+        cudaFree(inputs[DEVICE_RANK_B]);
+        cudaFree(inputs[DEVICE_LIMITS_A]);
+        cudaFree(inputs[DEVICE_LIMITS_B]);
         cudaFree(outputs[DEVICE_OUTPUT]);
     }
 }
