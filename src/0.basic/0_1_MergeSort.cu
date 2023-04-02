@@ -74,6 +74,24 @@ __global__ void mergeSortWithBinarySearch(TARGET_INPUT_TYPE* input) {
     input[blockDim.x + idx] = temp[blockDim.x + threadIdx.x];
 }
 
+template <bool dir>
+__global__ void getRanks(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* rankA, TARGET_INPUT_TYPE* rankB, unsigned int stride) {
+    // One rank per thread
+    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (blockIdx.x % 2 == 0) {
+        rankA[idx] = threadIdx.x * SAMPLE_STRIDE;
+        TARGET_INPUT_TYPE targetValue = input[blockIdx.x * blockDim.x * SAMPLE_STRIDE + threadIdx.x * SAMPLE_STRIDE];
+        TARGET_INPUT_TYPE* segmentB = input + (blockIdx.x + 1) * blockDim.x * SAMPLE_STRIDE;
+        rankB[idx] = getExclusivePositionByBinarySearch<dir>(segmentB, targetValue, stride, stride);
+    } else {
+        rankB[idx] = threadIdx.x * SAMPLE_STRIDE;
+        TARGET_INPUT_TYPE targetValue = input[blockIdx.x * blockDim.x * SAMPLE_STRIDE + threadIdx.x * SAMPLE_STRIDE];
+        TARGET_INPUT_TYPE* segmentA = input + (blockIdx.x - 1) * blockDim.x * SAMPLE_STRIDE;
+        rankA[idx] = getExclusivePositionByBinarySearch<dir>(segmentA, targetValue, stride, stride);
+    }
+}
+
 __global__ void mergeSortStep1(TARGET_INPUT_TYPE* input)
 {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -221,14 +239,26 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     // mergeSortStep1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
     // mergeSortStep2<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], outputs[DEVICE_OUTPUT], THREADS);
 
-    dim3 gridDim(divideUp(SIZE, 2 * THREADS));
-    dim3 gridDim2(divideUp(SIZE, 2 * THREADS) - 1);
-    dim3 blockDim(THREADS);
+    // buble sort + merge sort
+    // dim3 gridDim(divideUp(SIZE, 2 * THREADS));
+    // dim3 gridDim2(divideUp(SIZE, 2 * THREADS) - 1);
+    // dim3 blockDim(THREADS);
 
-    for (unsigned int idx = 0; idx < gridDim.x; ++idx) {
-        mergeSortWithBinarySearch<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
-        mergeSortWithBinarySearch<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
+    // for (unsigned int idx = 0; idx < gridDim.x; ++idx) {
+    //     mergeSortWithBinarySearch<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+    //     mergeSortWithBinarySearch<DIRECTION><<<gridDim2, blockDim>>>(inputs[DEVICE_INPUT] + THREADS);
+    // }
+
+    dim3 gridDim(divideUp(SIZE, 2 * THREADS));
+    dim3 blockDim(THREADS);
+    mergeSortWithBinarySearch<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
+
+    for (unsigned int stride = 2 * THREADS; stride < SIZE; stride <<= 1) {
+        blockDim = make_uint3(stride / SAMPLE_STRIDE, 1, 1);
+        gridDim = make_uint3(SIZE / blockDim.x, 1, 1);
+        getRanks<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], inputs[DEVICE_RANK_A], inputs[DEVICE_RANK_B], stride);
     }
+
     cudaDeviceSynchronize();
 
     checkCudaError(cudaGetLastError(), "Merge Sort launch failed - ");
