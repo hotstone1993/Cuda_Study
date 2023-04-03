@@ -2,6 +2,21 @@
 
 namespace cg = cooperative_groups;
 
+// Nvidia Sample Code
+#define W (sizeof(uint) * 8)
+static inline __device__ uint nextPowerOfTwo(uint x) {
+  /*
+      --x;
+      x |= x >> 1;
+      x |= x >> 2;
+      x |= x >> 4;
+      x |= x >> 8;
+      x |= x >> 16;
+      return ++x;
+  */
+  return 1U << (W - __clz(x - 1));
+}
+
 __device__ void naiveMerge(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* temp, unsigned int start, unsigned int idx, unsigned int stride, unsigned int size) {
     unsigned int left = start;
     unsigned int right = start + (stride / 2);
@@ -135,6 +150,33 @@ __global__ void getRanks(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* rankA, TAR
     }
 }
 
+template <bool dir>
+__global__ void getLimits(TARGET_INPUT_TYPE* rank, TARGET_INPUT_TYPE* limits, unsigned int stride, unsigned int rankCount) {
+    // Two rank per thread
+    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (rankCount <= idx) {
+        return;
+    }
+
+    const unsigned int baseIdx = idx & ((stride / SAMPLE_STRIDE) - 1);
+    const unsigned int segmentBase = (idx - baseIdx) * (2 * SAMPLE_STRIDE);
+    rank += ((idx - baseIdx) * 2);
+    limits += ((idx - baseIdx) * 2);
+
+    const unsigned int rankACount = stride % SAMPLE_STRIDE != 0 ? stride / SAMPLE_STRIDE + 1 : stride / SAMPLE_STRIDE;
+    const unsigned int rankBElements = umin(stride, SIZE - segmentBase - stride);
+    const unsigned int rankBCount = rankBElements % SAMPLE_STRIDE != 0 ? rankBElements / SAMPLE_STRIDE + 1 : rankBElements / SAMPLE_STRIDE;
+
+    if (idx < rankACount) {
+        unsigned int pos = getExclusivePositionByBinarySearch<dir>(rank + rankACount, rank[baseIdx], rankBCount, nextPowerOfTwo(rankBCount)) + baseIdx;
+        limits[pos] = rank[baseIdx];
+    }
+
+    if (idx < rankBCount) {
+        unsigned int pos = getExclusivePositionByBinarySearch<dir>(rank, rank[rankACount + baseIdx], rankACount, nextPowerOfTwo(rankACount)) + baseIdx;
+        limits[pos] = rank[rankACount + baseIdx];
+    }
+}
 
 template <bool dir>
 __device__ inline bool compare(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
@@ -254,9 +296,25 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     mergeSortWithBinarySearch<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
 
     for (unsigned int stride = 2 * THREADS; stride < SIZE; stride <<= 1) {
+        // step 1
         blockDim = make_uint3(stride / SAMPLE_STRIDE, 1, 1);
         gridDim = make_uint3(SIZE / stride, 1, 1);
+
+        std::cout << blockDim.x << ", " << gridDim.x << std::endl;
         getRanks<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], inputs[DEVICE_RANK_A], inputs[DEVICE_RANK_B], stride);
+        checkCudaError(cudaGetLastError(), "getRanks - ");
+
+        // step 2
+        unsigned int lastSegmentSize = SIZE % (2 * stride);
+        unsigned int rankCount = lastSegmentSize > stride ? (SIZE + 2 * stride - lastSegmentSize) / (2 * SAMPLE_STRIDE)
+        : (SIZE - lastSegmentSize) / (2 * SAMPLE_STRIDE);
+        blockDim = make_uint3(256, 1, 1);
+        gridDim = make_uint3(divideUp(rankCount, 256U), 1, 1);
+
+        getLimits<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_RANK_A], inputs[DEVICE_LIMITS_A], stride, rankCount);
+        checkCudaError(cudaGetLastError(), "getLimits A failed - ");
+        getLimits<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_RANK_B], inputs[DEVICE_LIMITS_B], stride, rankCount);
+        checkCudaError(cudaGetLastError(), "getLimits B failed - ");
     }
 
     cudaDeviceSynchronize();
