@@ -2,7 +2,7 @@
 
 namespace cg = cooperative_groups;
 
-__device__ void merge(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* temp, unsigned int start, unsigned int idx, unsigned int stride, unsigned int size) {
+__device__ void naiveMerge(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* temp, unsigned int start, unsigned int idx, unsigned int stride, unsigned int size) {
     unsigned int left = start;
     unsigned int right = start + (stride / 2);
     const unsigned int mid = right < SIZE ? right : SIZE;
@@ -20,6 +20,49 @@ __device__ void merge(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* temp, unsigne
         } else if (right >= end && left < mid) {
             temp[idx++] = input[left++];
         }
+    }
+}
+__global__ void naiveMergeSortStep1(TARGET_INPUT_TYPE* input)
+{
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    __shared__ TARGET_INPUT_TYPE temp[THREADS];
+    unsigned int stride = 2;
+
+    while (stride < THREADS) {
+        if (idx % stride == 0) {
+            naiveMerge(input, temp, idx, threadIdx.x, stride, THREADS);
+        }
+        __syncthreads();
+        if (idx < SIZE) {
+            input[idx] = temp[threadIdx.x];
+        }
+        __syncthreads();
+        stride <<= 1;
+    }
+}
+
+__global__ void naiveMergeSortStep2(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* output, unsigned int stride)
+{
+    bool flag = true;
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    TARGET_INPUT_TYPE* buffer1 = input;
+    TARGET_INPUT_TYPE* buffer2 = output;
+
+    while (stride / 2 < SIZE) {
+        if (idx % stride == 0) {
+            if (flag) {
+                naiveMerge(buffer1, buffer2, idx, idx, stride, SIZE);
+            } else {
+                naiveMerge(buffer2, buffer1, idx, idx, stride, SIZE);
+            }
+        }
+        __syncthreads();
+        flag = !flag;
+        stride <<= 1;
+    }
+    
+    if (flag && idx < SIZE) {
+        output[idx] = input[idx];
     }
 }
 
@@ -92,49 +135,6 @@ __global__ void getRanks(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* rankA, TAR
     }
 }
 
-__global__ void mergeSortStep1(TARGET_INPUT_TYPE* input)
-{
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    __shared__ TARGET_INPUT_TYPE temp[THREADS];
-    unsigned int stride = 2;
-
-    while (stride < THREADS) {
-        if (idx % stride == 0) {
-            merge(input, temp, idx, threadIdx.x, stride, THREADS);
-        }
-        __syncthreads();
-        if (idx < SIZE) {
-            input[idx] = temp[threadIdx.x];
-        }
-        __syncthreads();
-        stride <<= 1;
-    }
-}
-
-__global__ void mergeSortStep2(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* output, unsigned int stride)
-{
-    bool flag = true;
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    TARGET_INPUT_TYPE* buffer1 = input;
-    TARGET_INPUT_TYPE* buffer2 = output;
-
-    while (stride / 2 < SIZE) {
-        if (idx % stride == 0) {
-            if (flag) {
-                merge(buffer1, buffer2, idx, idx, stride, SIZE);
-            } else {
-                merge(buffer2, buffer1, idx, idx, stride, SIZE);
-            }
-        }
-        __syncthreads();
-        flag = !flag;
-        stride <<= 1;
-    }
-    
-    if (flag && idx < SIZE) {
-        output[idx] = input[idx];
-    }
-}
 
 template <bool dir>
 __device__ inline bool compare(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
