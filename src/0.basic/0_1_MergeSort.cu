@@ -133,20 +133,33 @@ __global__ void mergeSortWithBinarySearch(TARGET_INPUT_TYPE* input) {
 }
 
 template <bool dir>
-__global__ void getRanks(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* rankA, TARGET_INPUT_TYPE* rankB, unsigned int stride) {
-    // One rank per thread
+__global__ void getRanks(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* rankA, TARGET_INPUT_TYPE* rankB, unsigned int stride, unsigned int rankCount) {
+    // Two rank per thread
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (rankCount <= idx) {
+        return;
+    }
+        
+    const unsigned int baseIdx = idx & ((stride / SAMPLE_STRIDE) - 1);
+    const unsigned int segmentBase = (idx - baseIdx) * (2 * SAMPLE_STRIDE);
+    input += segmentBase;
+    rankA += segmentBase / SAMPLE_STRIDE;
+    rankB += segmentBase / SAMPLE_STRIDE;
 
-    if (blockIdx.x % 2 == 0) {
-        rankA[idx] = threadIdx.x * SAMPLE_STRIDE;
-        TARGET_INPUT_TYPE targetValue = input[blockIdx.x * blockDim.x * SAMPLE_STRIDE + threadIdx.x * SAMPLE_STRIDE];
-        TARGET_INPUT_TYPE* segmentB = input + (blockIdx.x + 1) * blockDim.x * SAMPLE_STRIDE;
-        rankB[idx] = getExclusivePositionByBinarySearch<dir>(segmentB, targetValue, stride, stride);
-    } else {
-        rankB[idx] = threadIdx.x * SAMPLE_STRIDE;
-        TARGET_INPUT_TYPE targetValue = input[blockIdx.x * blockDim.x * SAMPLE_STRIDE + threadIdx.x * SAMPLE_STRIDE];
-        TARGET_INPUT_TYPE* segmentA = input + (blockIdx.x - 1) * blockDim.x * SAMPLE_STRIDE;
-        rankA[idx] = getExclusivePositionByBinarySearch<dir>(segmentA, targetValue, stride, stride);
+    const unsigned int rankACount = stride % SAMPLE_STRIDE != 0 ? stride / SAMPLE_STRIDE + 1 : stride / SAMPLE_STRIDE;
+    const unsigned int rankBElements = umin(stride, SIZE - segmentBase - stride);
+    const unsigned int rankBCount = rankBElements % SAMPLE_STRIDE != 0 ? rankBElements / SAMPLE_STRIDE + 1 : rankBElements / SAMPLE_STRIDE;
+
+    if (idx < rankACount) {
+        rankA[baseIdx] = SAMPLE_STRIDE * baseIdx;
+        unsigned int pos = getExclusivePositionByBinarySearch<dir>(input + stride, input[SAMPLE_STRIDE * baseIdx], rankBElements, nextPowerOfTwo(rankBElements));
+        rankB[baseIdx] = pos;
+    }
+
+    if (idx < rankBCount) {
+        rankB[baseIdx + (stride / SAMPLE_STRIDE)] = SAMPLE_STRIDE * baseIdx;
+        unsigned int pos = getExclusivePositionByBinarySearch<dir>(input, input[stride + SAMPLE_STRIDE * baseIdx], SAMPLE_STRIDE, nextPowerOfTwo(SAMPLE_STRIDE));
+        rankA[baseIdx + (stride / SAMPLE_STRIDE)] = pos;
     }
 }
 
@@ -297,17 +310,16 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
 
     for (unsigned int stride = 2 * THREADS; stride < SIZE; stride <<= 1) {
         // step 1
-        blockDim = make_uint3(stride / SAMPLE_STRIDE, 1, 1);
-        gridDim = make_uint3(SIZE / stride, 1, 1);
-
-        std::cout << blockDim.x << ", " << gridDim.x << std::endl;
-        getRanks<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], inputs[DEVICE_RANK_A], inputs[DEVICE_RANK_B], stride);
-        checkCudaError(cudaGetLastError(), "getRanks - ");
-
-        // step 2
         unsigned int lastSegmentSize = SIZE % (2 * stride);
         unsigned int rankCount = lastSegmentSize > stride ? (SIZE + 2 * stride - lastSegmentSize) / (2 * SAMPLE_STRIDE)
         : (SIZE - lastSegmentSize) / (2 * SAMPLE_STRIDE);
+        blockDim = make_uint3(256, 1, 1);
+        gridDim = make_uint3(divideUp(rankCount, 256U), 1, 1);
+
+        getRanks<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], inputs[DEVICE_RANK_A], inputs[DEVICE_RANK_B], stride, rankCount);
+        checkCudaError(cudaGetLastError(), "getRanks - ");
+
+        // step 2
         blockDim = make_uint3(256, 1, 1);
         gridDim = make_uint3(divideUp(rankCount, 256U), 1, 1);
 
