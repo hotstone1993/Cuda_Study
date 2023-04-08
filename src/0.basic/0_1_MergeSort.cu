@@ -191,6 +191,83 @@ __global__ void getLimits(TARGET_INPUT_TYPE* rank, TARGET_INPUT_TYPE* limits, un
     }
 }
 
+
+template <bool dir>
+__device__ void merge(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* intputA, TARGET_INPUT_TYPE* intputB, uint lenA, uint nPowTwoLenA, uint lenB, uint nPowTwoLenB, cg::thread_block cta) {
+    TARGET_INPUT_TYPE a, b, dstPosA, dstPosB;
+
+    if (threadIdx.x < lenA) {
+        a = intputA[threadIdx.x];
+        dstPosA = getExclusivePositionByBinarySearch<dir>(intputB, a, lenB, nPowTwoLenB) + threadIdx.x;
+    }
+
+    if (threadIdx.x < lenB) {
+        b = intputB[threadIdx.x];
+        dstPosB = getInclusivePositionByBinarySearch<dir>(intputA, b, lenA, nPowTwoLenA) + threadIdx.x;
+    }
+
+    cg::sync(cta);
+
+    if (threadIdx.x < lenA) {
+        output[dstPosA] = a;
+    }
+
+    if (threadIdx.x < lenB) {
+        output[dstPosB] = b;
+    }
+}
+
+template <uint dir>
+__global__ void mergeSort(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* limitsA, TARGET_INPUT_TYPE* limitsB, uint stride) {
+  cg::thread_block cta = cg::this_thread_block();
+  __shared__ TARGET_INPUT_TYPE temp[2 * SAMPLE_STRIDE];
+
+  const uint intervalI = blockIdx.x & ((2 * stride) / SAMPLE_STRIDE - 1);
+  const uint segmentBase = (blockIdx.x - intervalI) * SAMPLE_STRIDE;
+  input += segmentBase;
+  output += segmentBase;
+
+  __shared__ uint startSrcA, startSrcB, lenSrcA, lenSrcB, startDstA, startDstB;
+
+  if (threadIdx.x == 0) {
+    uint segmentElementsA = stride;
+    uint segmentElementsB = umin(stride, SIZE - segmentBase - stride);
+    uint segmentSamplesA = segmentElementsA % SAMPLE_STRIDE != 0 ? segmentElementsA / SAMPLE_STRIDE + 1 : segmentElementsA / SAMPLE_STRIDE;
+    uint segmentSamplesB = segmentElementsB % SAMPLE_STRIDE != 0 ? segmentElementsB / SAMPLE_STRIDE + 1 : segmentElementsB / SAMPLE_STRIDE;
+    uint segmentSamples = segmentSamplesA + segmentSamplesB;
+
+    startSrcA = limitsA[blockIdx.x];
+    startSrcB = limitsB[blockIdx.x];
+    TARGET_INPUT_TYPE endSrcA = (intervalI + 1 < segmentSamples) ? limitsA[blockIdx.x + 1] : segmentElementsA;
+    TARGET_INPUT_TYPE endSrcB = (intervalI + 1 < segmentSamples) ? limitsB[blockIdx.x + 1] : segmentElementsB;
+    lenSrcA = endSrcA - startSrcA;
+    lenSrcB = endSrcB - startSrcB;
+    startDstA = startSrcA + startSrcB;
+    startDstB = startDstA + lenSrcA;
+  }
+
+  cg::sync(cta);
+  if (threadIdx.x < lenSrcA) {
+    temp[threadIdx.x + 0] = input[0 + startSrcA + threadIdx.x];
+  }
+
+  if (threadIdx.x < lenSrcB) {
+    temp[threadIdx.x + SAMPLE_STRIDE] = input[stride + startSrcB + threadIdx.x];
+  }
+
+  cg::sync(cta);
+  merge<dir>(temp, temp + 0, temp + SAMPLE_STRIDE, lenSrcA, SAMPLE_STRIDE, lenSrcB, SAMPLE_STRIDE, cta);
+  cg::sync(cta);
+
+  if (threadIdx.x < lenSrcA) {
+    output[startDstA + threadIdx.x] = temp[threadIdx.x];
+  }
+
+  if (threadIdx.x < lenSrcB) {
+    output[startDstB + threadIdx.x] = temp[lenSrcA + threadIdx.x];
+  }
+}
+
 template <bool dir>
 __device__ inline bool compare(TARGET_INPUT_TYPE& a, TARGET_INPUT_TYPE& b) {
     if (dir) {
@@ -308,6 +385,9 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     dim3 blockDim(THREADS);
     mergeSortWithBinarySearch<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT]);
 
+    TARGET_INPUT_TYPE* input = inputs[DEVICE_INPUT];
+    TARGET_INPUT_TYPE* output = outputs[DEVICE_OUTPUT];
+
     for (unsigned int stride = 2 * THREADS; stride < SIZE; stride <<= 1) {
         // step 1
         unsigned int lastSegmentSize = SIZE % (2 * stride);
@@ -316,7 +396,7 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         blockDim = make_uint3(256, 1, 1);
         gridDim = make_uint3(divideUp(rankCount, 256U), 1, 1);
 
-        getRanks<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_INPUT], inputs[DEVICE_RANK_A], inputs[DEVICE_RANK_B], stride, rankCount);
+        getRanks<DIRECTION><<<gridDim, blockDim>>>(input, inputs[DEVICE_RANK_A], inputs[DEVICE_RANK_B], stride, rankCount);
         checkCudaError(cudaGetLastError(), "getRanks - ");
 
         // step 2
@@ -327,13 +407,19 @@ void basic::merge::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         checkCudaError(cudaGetLastError(), "getLimits A failed - ");
         getLimits<DIRECTION><<<gridDim, blockDim>>>(inputs[DEVICE_RANK_B], inputs[DEVICE_LIMITS_B], stride, rankCount);
         checkCudaError(cudaGetLastError(), "getLimits B failed - ");
+
+        mergeSort<DIRECTION><<<gridDim, blockDim>>>(output, input, inputs[DEVICE_LIMITS_A], inputs[DEVICE_LIMITS_B], stride);
+
+        TARGET_INPUT_TYPE* temp = input;
+        input = output;
+        output = temp;
     }
 
     cudaDeviceSynchronize();
 
     checkCudaError(cudaGetLastError(), "Merge Sort launch failed - ");
     
-    checkCudaError(cudaMemcpy(inputs[HOST_INPUT], inputs[DEVICE_INPUT], SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
+    checkCudaError(cudaMemcpy(inputs[HOST_INPUT], output, SIZE * sizeof(T2), cudaMemcpyDeviceToHost), "cudaMemcpy failed! (Device to Host) - ");
 }
 
 template void basic::merge::run(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
