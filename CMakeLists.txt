@@ -29,6 +29,7 @@ target_include_directories( ${PROJECT_NAME} PUBLIC
 )
 
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -G")
 
 if(MSVC)
     find_package(CUDA)
