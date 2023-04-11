@@ -3,8 +3,8 @@
 namespace cg = cooperative_groups;
 
 // Nvidia Sample Code
-#define W (sizeof(uint) * 8)
-static inline __device__ uint nextPowerOfTwo(uint x) {
+#define W (sizeof(unsigned int) * 8)
+static inline __device__ unsigned int nextPowerOfTwo(unsigned int x) {
   /*
       --x;
       x |= x >> 1;
@@ -150,13 +150,13 @@ __global__ void getRanks(TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* rankA, TAR
     const unsigned int rankBElements = umin(stride, SIZE - segmentBase - stride);
     const unsigned int rankBCount = rankBElements % SAMPLE_STRIDE != 0 ? rankBElements / SAMPLE_STRIDE + 1 : rankBElements / SAMPLE_STRIDE;
 
-    if (idx < rankACount) {
+    if (baseIdx < rankACount) {
         rankA[baseIdx] = SAMPLE_STRIDE * baseIdx;
         unsigned int pos = getExclusivePositionByBinarySearch<dir>(input + stride, input[SAMPLE_STRIDE * baseIdx], rankBElements, nextPowerOfTwo(rankBElements));
         rankB[baseIdx] = pos;
     }
 
-    if (idx < rankBCount) {
+    if (baseIdx < rankBCount) {
         rankB[baseIdx + (stride / SAMPLE_STRIDE)] = SAMPLE_STRIDE * baseIdx;
         unsigned int pos = getInclusivePositionByBinarySearch<dir>(input, input[stride + SAMPLE_STRIDE * baseIdx], stride, nextPowerOfTwo(stride));
         rankA[baseIdx + (stride / SAMPLE_STRIDE)] = pos;
@@ -193,7 +193,7 @@ __global__ void getLimits(TARGET_INPUT_TYPE* rank, TARGET_INPUT_TYPE* limits, un
 
 
 template <bool dir>
-__device__ void merge(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* intputA, TARGET_INPUT_TYPE* intputB, uint lenA, uint nPowTwoLenA, uint lenB, uint nPowTwoLenB, cg::thread_block cta) {
+__device__ void merge(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* intputA, TARGET_INPUT_TYPE* intputB, unsigned int lenA, unsigned int nPowTwoLenA, unsigned int lenB, unsigned int nPowTwoLenB, cg::thread_block cta) {
     TARGET_INPUT_TYPE a, b, dstPosA, dstPosB;
 
     if (threadIdx.x < lenA) {
@@ -217,25 +217,25 @@ __device__ void merge(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* intputA, TAR
     }
 }
 
-template <uint dir>
-__global__ void mergeSort(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* limitsA, TARGET_INPUT_TYPE* limitsB, uint stride) {
+template <bool dir>
+__global__ void mergeSort(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* input, TARGET_INPUT_TYPE* limitsA, TARGET_INPUT_TYPE* limitsB, unsigned int stride) {
     cg::thread_block cta = cg::this_thread_block();
     __shared__ TARGET_INPUT_TYPE src[2 * SAMPLE_STRIDE];
     __shared__ TARGET_INPUT_TYPE dst[2 * SAMPLE_STRIDE];
 
-    const uint intervalI = blockIdx.x & ((2 * stride) / SAMPLE_STRIDE - 1);
-    const uint segmentBase = (blockIdx.x - intervalI) * SAMPLE_STRIDE;
+    const unsigned int intervalI = blockIdx.x & ((2 * stride) / SAMPLE_STRIDE - 1);
+    const unsigned int segmentBase = (blockIdx.x - intervalI) * SAMPLE_STRIDE;
     input += segmentBase;
     output += segmentBase;
 
-    __shared__ uint startSrcA, startSrcB, lenSrcA, lenSrcB, startDstA, startDstB;
+    __shared__ unsigned int startSrcA, startSrcB, lenSrcA, lenSrcB, startDstA, startDstB;
 
     if (threadIdx.x == 0) {
-        uint segmentElementsA = stride;
-        uint segmentElementsB = umin(stride, SIZE - segmentBase - stride);
-        uint segmentSamplesA = segmentElementsA % SAMPLE_STRIDE != 0 ? segmentElementsA / SAMPLE_STRIDE + 1 : segmentElementsA / SAMPLE_STRIDE;
-        uint segmentSamplesB = segmentElementsB % SAMPLE_STRIDE != 0 ? segmentElementsB / SAMPLE_STRIDE + 1 : segmentElementsB / SAMPLE_STRIDE;
-        uint segmentSamples = segmentSamplesA + segmentSamplesB;
+        unsigned int segmentElementsA = stride;
+        unsigned int segmentElementsB = umin(stride, SIZE - segmentBase - stride);
+        unsigned int segmentSamplesA = segmentElementsA % SAMPLE_STRIDE != 0 ? segmentElementsA / SAMPLE_STRIDE + 1 : segmentElementsA / SAMPLE_STRIDE;
+        unsigned int segmentSamplesB = segmentElementsB % SAMPLE_STRIDE != 0 ? segmentElementsB / SAMPLE_STRIDE + 1 : segmentElementsB / SAMPLE_STRIDE;
+        unsigned int segmentSamples = segmentSamplesA + segmentSamplesB;
 
         startSrcA = limitsA[blockIdx.x];
         startSrcB = limitsB[blockIdx.x];
@@ -246,7 +246,7 @@ __global__ void mergeSort(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* input, T
         startDstA = startSrcA + startSrcB;
         startDstB = startDstA + lenSrcA;
             
-        if (intervalI + 1 >= segmentSamples) {
+        if (lenSrcA > SAMPLE_STRIDE) {
             printf("blockIdx(%d, %d) - %d, %d\n", blockIdx.x, intervalI, startSrcA, endSrcA);
         }
     }
