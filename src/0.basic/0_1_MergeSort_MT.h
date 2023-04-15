@@ -5,7 +5,7 @@
 
 namespace basic::merge {
     inline const char* getComparisonTarget() {
-        return "std::qsort";
+        return "just check";
     }
     template <class T1, class T2>
     void run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs);

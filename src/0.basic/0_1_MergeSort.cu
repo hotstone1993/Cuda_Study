@@ -245,10 +245,6 @@ __global__ void mergeSort(TARGET_INPUT_TYPE* output, TARGET_INPUT_TYPE* input, T
         lenSrcB = endSrcB - startSrcB;
         startDstA = startSrcA + startSrcB;
         startDstB = startDstA + lenSrcA;
-            
-        if (lenSrcA > SAMPLE_STRIDE) {
-            printf("blockIdx(%d, %d) - %d, %d\n", blockIdx.x, intervalI, startSrcA, endSrcA);
-        }
     }
 
     cg::sync(cta);

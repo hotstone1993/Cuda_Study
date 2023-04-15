@@ -10,7 +10,7 @@
 #define DEVICE_OUTPUT 0
 #define OUTPUT_COUNT 1
 
-#define SIZE 1000000
+#define SIZE 1048576
 #define THREADS 1024
 #define SAMPLE_STRIDE 128
 #define DIRECTION true

@@ -20,21 +20,20 @@ int compLess( const void* lhs, const void* rhs ) {
 
 template <class T1, class T2>
 void basic::merge::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
-    // std::vector<std::future<void>> futures;
+    std::vector<std::future<void>> futures;
     
-    // ThreadPool tp(THREAD_COUNT); 
+    ThreadPool tp(THREAD_COUNT); 
 
-    // for (size_t t = 0; t < THREAD_COUNT; ++t) {
-    //     size_t start = (SIZE / THREAD_COUNT) * t;
-    //     size_t end = (t < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (t + 1) : SIZE;
+    for (size_t t = 0; t < THREAD_COUNT; ++t) {
+        size_t start = (SIZE / THREAD_COUNT) * t;
+        size_t end = (t < THREAD_COUNT - 1) ? (SIZE / THREAD_COUNT) * (t + 1) : SIZE;
 
-    //     futures.emplace_back(tp.addJob(checkResult, inputs[HOST_INPUT], start, end));
-    // }
+        futures.emplace_back(tp.addJob(checkResult, inputs[HOST_INPUT], start, end));
+    }
 
-    // for (auto& f : futures) {
-    //     f.get(); // for exception
-    // }
-    std::qsort(inputs[CPU_INPUT], SIZE, sizeof(T1), compLess);
+    for (auto& f : futures) {
+        f.get(); // for exception
+    }
 }
 
 template void basic::merge::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
