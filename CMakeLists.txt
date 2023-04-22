@@ -28,8 +28,11 @@ target_include_directories( ${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/stb
 )
 
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -G")
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+    target_compile_options(target PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+            -G -src-in-ptx --ptxas-options=-v -allow-unsupported-compiler
+            >)
+endif()
 
 if(MSVC)
     find_package(CUDA)
