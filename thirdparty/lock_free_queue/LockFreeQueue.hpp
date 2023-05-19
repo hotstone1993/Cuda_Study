@@ -11,8 +11,8 @@ enum class QueueType {
 template <typename T>
 class LockFreeQueue {
 public:
-    LockFreeQueue(QueueType type);
-    virtual ~LockFreeQueue();
+    LockFreeQueue(QueueType type): type(type) {};
+    virtual ~LockFreeQueue() {};
 
     bool empty() const {
         return container.empty();
