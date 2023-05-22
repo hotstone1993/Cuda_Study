@@ -22,11 +22,12 @@ public:
         return container.size();
     }
 
-    void push(T&& object) {
+    template <typename TYPE>
+    void push(TYPE&& object) {
         if (type == QueueType::SPSC) {
-            container.push_back(std::forward<T>(object));
+            container.push_back(std::forward<TYPE>(object));
         } else if (type == QueueType::SPMC) {
-
+            container.push_back(std::forward<TYPE>(object));
         } else if (type == QueueType::MPSC) {
 
         } else if (type == QueueType::MPMC) {
@@ -42,7 +43,11 @@ public:
                 return true;
             }
         } else if (type == QueueType::SPMC) {
-
+            if (!container.empty()) {
+                ref = std::move(container.front());
+                container.pop_front();
+                return true;
+            }
         } else if (type == QueueType::MPSC) {
 
         } else if (type == QueueType::MPMC) {
