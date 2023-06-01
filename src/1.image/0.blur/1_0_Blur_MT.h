@@ -2,6 +2,7 @@
 #define IMAGE_BLUR_MT
 
 #include "1_0_Blur_Const.h"
+#include "concept_utils.h"
 
 namespace image::blur {
     inline const char* getComparisonTarget() {

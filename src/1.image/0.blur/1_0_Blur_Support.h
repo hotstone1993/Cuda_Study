@@ -54,7 +54,7 @@ namespace image::blur {
     }
 
     template <class T1, class T2>
-    requires (std::integral<T1> && sizeof(T1) >= 4)
+    requires is_integer<T1>
     void setup(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         char const* fileName = "../data/1.image/Sample-png-image-30mb.png";
         int width, height, pixel;

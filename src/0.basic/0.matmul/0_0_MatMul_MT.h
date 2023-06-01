@@ -2,6 +2,7 @@
 #define MUL_MATRIX_MT
 
 #include "0_0_MatMul_Const.h"
+#include "concept_utils.h"
 
 namespace basic::matmul {
     inline const char* getComparisonTarget() {

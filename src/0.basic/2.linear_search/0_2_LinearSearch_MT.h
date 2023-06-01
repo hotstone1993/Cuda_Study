@@ -2,6 +2,7 @@
 #define LINEAR_SEARCH_MT
 
 #include "0_2_LinearSearch_Const.h"
+#include "concept_utils.h"
 
 namespace basic::linear_search {
     inline const char* getComparisonTarget() {

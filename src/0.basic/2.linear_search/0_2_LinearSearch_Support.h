@@ -40,7 +40,7 @@ namespace basic::linear_search {
     }
 
     template <class T1, class T2>
-    requires (std::is_same_v<T1, T2> && std::is_same_v<T2, T1>)
+    requires is_type_same<T2, T1>
     void setup(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         inputs.resize(INPUT_COUNT);
         outputs.resize(OUTPUT_COUNT);

@@ -2,6 +2,7 @@
 #define MERGE_SORT_MT
 
 #include "0_1_MergeSort_Const.h"
+#include "concept_utils.h"
 
 namespace basic::merge {
     inline const char* getComparisonTarget() {
