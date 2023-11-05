@@ -69,7 +69,6 @@ void image::blur::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     int pixel = *inputs[IMAGE_STRIDE];
     TARGET_OUTPUT_TYPE* buffer1 = reinterpret_cast<T2*>(inputs[DEVICE_INPUT]);
     TARGET_OUTPUT_TYPE* buffer2 = outputs[DEVICE_OUTPUT];
-    cudaArray *textureArray;
     dim3 blockDim(height % THREADS > 0 ? height / THREADS + 1 : height / THREADS);
 
     horizontalBlurImage<<<blockDim, THREADS>>>(buffer1
