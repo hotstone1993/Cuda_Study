@@ -14,5 +14,4 @@ set(BASE_SRC_PATH_LIST ${CMAKE_CURRENT_LIST_DIR}/../src/main.cpp
 
 set(BASE_HEADER_PATH_LIST ${CMAKE_CURRENT_LIST_DIR}/../src
                             ${CMAKE_CURRENT_LIST_DIR}/../src/include
-                            ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/stb
                             ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})

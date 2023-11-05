@@ -21,6 +21,7 @@ set_target_properties(
 
 target_include_directories(
   ${PROJECT_NAME} PUBLIC ${BASE_HEADER_PATH_LIST}
-                            ${CMAKE_CURRENT_SOURCE_DIR})
+                            ${CMAKE_CURRENT_SOURCE_DIR}
+                            ${CMAKE_CURRENT_SOURCE_DIR}/../../../thirdparty/stb)
 
 target_link_libraries(${PROJECT_NAME} ${CUDART_LIBRARY})
