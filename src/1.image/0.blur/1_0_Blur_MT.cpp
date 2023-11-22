@@ -66,7 +66,7 @@ void horizontalBlur(TARGET_OUTPUT_TYPE* image, TARGET_OUTPUT_TYPE* result, int w
 }
 
 template <class T1, class T2>
-void image::blur::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+void image::blur::run_comparison_target(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     std::vector<std::future<void>> futures;
     ThreadPool tp(THREAD_COUNT);
 
@@ -93,4 +93,4 @@ void image::blur::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     }
 }
 
-template void image::blur::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
+template void image::blur::run_comparison_target(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);

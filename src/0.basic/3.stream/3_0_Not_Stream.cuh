@@ -1,15 +1,15 @@
-#ifndef STREAM_MT
-#define STREAM_MT
+#ifndef NOT_STREAM
+#define NOT_STREAM
 
 #include "3_0_Stream_Const.h"
 #include "concept_utils.h"
 
 namespace basic::stream {
     inline const char* getComparisonTarget() {
-        return "Multi Thread";
+        return "Not Stream";
     }
     template <class T1, class T2>
-    void run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs);
+    void run_comparison_target(std::vector<T1*>& inputs, std::vector<T2*>& outputs);
 }
 
-#endif // STREAM_MT
+#endif // NOT_STREAM

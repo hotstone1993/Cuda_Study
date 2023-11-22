@@ -8,7 +8,7 @@ add_executable(
   ${PROJECT_NAME}
   ${BASE_SRC_PATH_LIST}
   ${CMAKE_CURRENT_SOURCE_DIR}/3_0_Stream.cu
-  ${CMAKE_CURRENT_SOURCE_DIR}/3_0_Stream_MT.cpp)
+  ${CMAKE_CURRENT_SOURCE_DIR}/3_0_Not_Stream.cu)
   
 set_target_properties(
   ${PROJECT_NAME}

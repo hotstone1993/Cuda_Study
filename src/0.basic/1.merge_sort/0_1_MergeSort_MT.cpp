@@ -19,7 +19,7 @@ int compLess( const void* lhs, const void* rhs ) {
 }
 
 template <class T1, class T2>
-void basic::merge::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+void basic::merge::run_comparison_target(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     std::vector<std::future<void>> futures;
     
     ThreadPool tp(THREAD_COUNT); 
@@ -36,4 +36,4 @@ void basic::merge::run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     }
 }
 
-template void basic::merge::run_mt(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);
+template void basic::merge::run_comparison_target(std::vector<TARGET_INPUT_TYPE*>& inputs, std::vector<TARGET_OUTPUT_TYPE*>& outputs);

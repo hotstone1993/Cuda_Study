@@ -2,7 +2,7 @@
 #ifndef STREAM_SETUP
 #define STREAM_SETUP
 
-#include "3_0_Stream_MT.h"
+#include "3_0_Not_Stream.cuh"
 #include "3_0_Stream.cuh"
 
 namespace basic::stream {

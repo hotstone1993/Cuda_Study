@@ -16,7 +16,7 @@
     timer.printElapsedTime("CUDA"); \
     \
     timer.startTimer(); \
-    TARGET_NAMESPACE::run_mt(INPUTS, OUTPUTS); \
+    TARGET_NAMESPACE::run_comparison_target(INPUTS, OUTPUTS); \
     timer.stopTimer(); \
     timer.printElapsedTime(TARGET_NAMESPACE::getComparisonTarget()); \
     \

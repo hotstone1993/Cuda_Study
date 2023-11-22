@@ -9,7 +9,7 @@ namespace basic::linear_search {
         return "Just Check";
     }
     template <class T1, class T2>
-    void run_mt(std::vector<T1*>& inputs, std::vector<T2*>& outputs);
+    void run_comparison_target(std::vector<T1*>& inputs, std::vector<T2*>& outputs);
 }
 
 #endif // LINEAR_SEARCH_MT

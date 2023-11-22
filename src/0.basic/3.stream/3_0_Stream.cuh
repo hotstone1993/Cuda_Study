@@ -1,5 +1,5 @@
-#ifndef MUL_MATRIX
-#define MUL_MATRIX
+#ifndef STREAM
+#define STREAM
 
 #include "3_0_Stream_Const.h"
 
