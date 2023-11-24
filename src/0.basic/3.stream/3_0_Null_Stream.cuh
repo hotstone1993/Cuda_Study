@@ -2,7 +2,6 @@
 #define NOT_STREAM
 
 #include "3_0_Stream_Const.h"
-#include "concept_utils.h"
 
 namespace basic::stream {
     inline const char* getComparisonTarget() {
