@@ -1,7 +1,7 @@
 #include "3_0_Null_Stream.cuh"
 
 
-__global__ void nullStreamKernal(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* output) {
+__global__ void kernal1(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* output) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     
     if (idx < gridDim.x * blockDim.x - 1) {
@@ -16,7 +16,7 @@ void basic::stream::run_comparison_target(std::vector<T1*>& inputs, std::vector<
     dim3 gridDim(divideUp(SIZE, THREADS));
     dim3 blockDim(THREADS);
 
-    nullStreamKernal<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT1], inputs[DEVICE_OUTPUT1]);
+    kernal1<<<gridDim, blockDim>>>(inputs[DEVICE_INPUT1], inputs[DEVICE_OUTPUT1]);
     cudaDeviceSynchronize();
     
     checkCudaError(cudaGetLastError(), "Null Stream launch failed - ");
