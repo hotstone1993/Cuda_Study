@@ -39,11 +39,10 @@ void basic::stream::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         cudaMemcpyAsync(deviceInput, hostInput, sizeof(T1) * segment, cudaMemcpyHostToDevice, streams[i]);
 
         kernal2<<<gridDim, blockDim, 0, streams[i]>>>(deviceInput, deviceOutput);
-    
-        checkCudaError(cudaGetLastError(), "Non-Null Stream launch failed - ");
 
         cudaMemcpyAsync(hostOutput, deviceOutput, sizeof(T2) * segment, cudaMemcpyDeviceToHost, streams[i]);
     }
+    checkCudaError(cudaGetLastError(), "Non-Null Stream launch failed - ");
 	cudaDeviceSynchronize();
 
     for (unsigned int i = 0; i < STREAMS; ++i) {

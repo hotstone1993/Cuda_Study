@@ -21,11 +21,6 @@ namespace basic::stream {
         }
     }
 
-    template <class T1>
-    void copyInputs(std::vector<T1*>& inputs) {
-        checkCudaError(cudaMemcpy(inputs[DEVICE_INPUT1], inputs[HOST_INPUT1], SIZE * sizeof(T1), cudaMemcpyHostToDevice), "cudaMemcpy failed! (Host to Device) - ");
-    }
-
     template <class T1, class T2>
     void setup(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
         inputs.resize(INPUT_COUNT);
@@ -42,7 +37,6 @@ namespace basic::stream {
         CUDA_MALLOC(outputs[DEVICE_OUTPUT2], SIZE, T2)
 
         initRandom(inputs);
-        copyInputs(inputs);
     }
         
     template <class T1, class T2>
