@@ -5,7 +5,7 @@
 
 namespace basic::stream {
     inline const char* getComparisonTarget() {
-        return "Not Stream";
+        return "Null Stream";
     }
     template <class T1, class T2>
     void run_comparison_target(std::vector<T1*>& inputs, std::vector<T2*>& outputs);

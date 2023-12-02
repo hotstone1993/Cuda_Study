@@ -27,12 +27,12 @@ namespace basic::stream {
         outputs.resize(OUTPUT_COUNT);
 
         inputs[HOST_INPUT1] = new T1[SIZE];
-	    cudaMallocHost(&inputs[HOST_INPUT2], sizeof(T1)*SIZE);
+	    checkCudaError(cudaMallocHost(&inputs[HOST_INPUT2], sizeof(T1) * SIZE), "cudaMallocHost - ");
         CUDA_MALLOC(inputs[DEVICE_INPUT1], SIZE, T1)
         CUDA_MALLOC(inputs[DEVICE_INPUT2], SIZE, T1)
 
         outputs[HOST_OUTPUT1] = new T2[SIZE];
-	    cudaMallocHost(&inputs[HOST_OUTPUT2], sizeof(T2)*SIZE);
+	    checkCudaError(cudaMallocHost(&outputs[HOST_OUTPUT2], sizeof(T2) * SIZE), "cudaMallocHost - ");
         CUDA_MALLOC(outputs[DEVICE_OUTPUT1], SIZE, T2)
         CUDA_MALLOC(outputs[DEVICE_OUTPUT2], SIZE, T2)
 
@@ -45,7 +45,6 @@ namespace basic::stream {
         cudaFreeHost(inputs[HOST_INPUT2]);
         cudaFree(inputs[DEVICE_INPUT1]);
         cudaFree(inputs[DEVICE_INPUT2]);
-
 
         delete[] outputs[HOST_OUTPUT1];
         cudaFreeHost(inputs[HOST_OUTPUT2]);

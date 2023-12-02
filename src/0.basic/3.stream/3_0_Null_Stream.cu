@@ -14,7 +14,6 @@ __global__ void kernal1(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* output) {
 template <class T1, class T2>
 void basic::stream::run_comparison_target(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
     dim3 gridDim(divideUp(SIZE, THREADS));
-    std::cout << gridDim.x << std::endl;
     dim3 blockDim(THREADS);
     
     checkCudaError(cudaMemcpy(inputs[DEVICE_INPUT1], inputs[HOST_INPUT1], SIZE * sizeof(T1), cudaMemcpyHostToDevice), "cudaMemcpy failed! (Host to Device) - ");
