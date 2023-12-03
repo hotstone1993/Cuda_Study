@@ -11,8 +11,8 @@
 #define OUTPUT_COUNT 4
 
 #define THREADS 1024
-#define SIZE (1 << 20)
-#define STREAMS 5
+#define SIZE (1 << 25)
+#define STREAMS 10
 
 typedef int TARGET_INPUT_TYPE;
 typedef int TARGET_OUTPUT_TYPE;
