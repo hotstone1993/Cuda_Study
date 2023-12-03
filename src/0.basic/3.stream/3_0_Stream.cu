@@ -1,12 +1,12 @@
 #include "3_0_Stream.cuh"
 
 // Same as the algorithm of 3_0_Null_Stream.cu
-__global__ void kernal2(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* output) {
+__global__ void kernal2(TARGET_INPUT_TYPE* input, TARGET_OUTPUT_TYPE* output, unsigned int size) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     
-    if (idx < gridDim.x * blockDim.x - 1) {
+    if (idx < size - 1) {
         output[idx] = (input[idx] + input[idx + 1]) / 2;
-    } else {
+    } else if (idx < size) {
         output[idx] = input[idx];    
     }
 }
@@ -38,7 +38,7 @@ void basic::stream::run(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
 
         checkCudaError(cudaMemcpyAsync(deviceInput, hostInput, sizeof(T1) * realSize, cudaMemcpyHostToDevice, streams[i]), "cudaMemcpyAsync(HostToDevice) - ");
 
-        kernal2<<<gridDim, blockDim, 0, streams[i]>>>(deviceInput, deviceOutput);
+        kernal2<<<gridDim, blockDim, 0, streams[i]>>>(deviceInput, deviceOutput, realSize);
 
         checkCudaError(cudaMemcpyAsync(hostOutput, deviceOutput, sizeof(T2) * realSize, cudaMemcpyDeviceToHost, streams[i]), "cudaMemcpyAsync(DeviceToHost) - ");
         
