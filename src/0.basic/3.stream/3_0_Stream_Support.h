@@ -7,7 +7,7 @@
 
 namespace basic::stream {
     void printInfo() {
-        std::cerr << "Stream" << std::endl;
+        std::cerr << "[Stream VS Null-Stream]" << std::endl;
     }
     
     template <class T1>
