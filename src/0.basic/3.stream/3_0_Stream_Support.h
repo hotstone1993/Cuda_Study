@@ -38,9 +38,19 @@ namespace basic::stream {
 
         initRandom(inputs);
     }
+
+    template <class T2>
+    void checkResult(std::vector<T2*>& outputs) {
+        for (unsigned int i = 0; i < SIZE; ++i) {
+            if (outputs[HOST_OUTPUT1][i] != outputs[HOST_OUTPUT2][i]) {
+                throw std::runtime_error("The result is incorrect!");
+            }
+        }        
+    }
         
     template <class T1, class T2>
     void destroy(std::vector<T1*>& inputs, std::vector<T2*>& outputs) {
+        checkResult(outputs);
         delete[] inputs[HOST_INPUT1];
         cudaFreeHost(inputs[HOST_INPUT2]);
         cudaFree(inputs[DEVICE_INPUT1]);
