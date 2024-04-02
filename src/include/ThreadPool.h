@@ -31,7 +31,9 @@ public:
         std::future<returnType> jobResultFuture = job->get_future();
         m.lock();
         
-        (*job)();
+        jobQueue.push([job]() {
+            (*job)();
+        });
 
         m.unlock();
 
